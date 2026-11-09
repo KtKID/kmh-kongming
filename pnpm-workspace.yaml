@@ -1,0 +1,9 @@
+# 孔明套件仓：一仓两包（kongming + kongming-memory），互依用仓内 workspace 解析。
+# pnpm 默认供应链策略（minimumReleaseAge）会对传递依赖当日新发版本误伤 CI，此处豁免；
+# allowBuilds 放行 dsh 依赖链所需的原生/构建脚本包。
+packages:
+  - packages/*
+minimumReleaseAge: 0
+allowBuilds:
+  koffi: true
+  esbuild: true

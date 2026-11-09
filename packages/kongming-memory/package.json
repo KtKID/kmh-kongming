@@ -1,0 +1,75 @@
+{
+  "name": "@kmh/kongming-memory-v1",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "孔明独立记忆：冻结文件、完整加载与手动压缩刷新",
+  "types": "lib/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/src/index.d.ts",
+      "default": "./lib/src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build": "node build.ts",
+    "test": "node --test test/main-flow.test.ts test/prompt-config.test.ts test/turn-reminder.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src build.ts test --max-warnings 0",
+    "format:check": "prettier src build.ts test tsconfig*.json package.json cordis.patch.yml README.md --check"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/schemastery": "3.18.6-alpha.1",
+    "@deepseek-ai/cordis": "4.0.6-alpha.1",
+    "@deepseek-ai/dsh-agent": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-system-prompt": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-compaction": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-home-paths": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-commands": "0.2.2-alpha.2",
+    "@kmh/kongming": "0.1.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.6-alpha.1",
+    "@deepseek-ai/cordis-plugin-include": "1.0.11-alpha.1",
+    "@deepseek-ai/cordis-plugin-loader": "1.0.7-alpha.1",
+    "@deepseek-ai/dsh-agent": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-agent-loop-testkit": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-app-boot": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-command-compact": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-commands": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-compaction": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-compaction-basic": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-fs-sandbox": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-home-paths": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-llm": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-sandbox-policy": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-session-persistence-jsonl": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-system-prompt": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-token-meter": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-tool-fs": "0.2.2-alpha.2",
+    "@deepseek-ai/dsh-user-approval": "0.2.2-alpha.2",
+    "@deepseek-ai/schemastery": "3.18.6-alpha.2",
+    "@eslint/js": "^9.39.0",
+    "@kmh/kongming": "workspace:*",
+    "@types/node": "^22.20.0",
+    "eslint": "^9.39.0",
+    "prettier": "^3.7.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.57.0"
+  },
+  "main": "lib/src/index.js",
+  "peerDependenciesMeta": {
+    "@kmh/kongming": {
+      "optional": true
+    }
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "kmh-kongming-repo",
+  "private": true,
+  "description": "孔明套件仓容器：实际代码在 packages/kongming 与 packages/kongming-memory",
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "eslint": "^9.39.0",
+    "typescript-eslint": "^8.57.0",
+    "prettier": "^3.7.0"
+  }
+}

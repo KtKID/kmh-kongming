@@ -1,0 +1,142 @@
+# 干净的首阶段组合：公共服务、文件工具、标准 Web 界面及孔明。
+- id: llm
+  name: "@deepseek-ai/dsh-llm"
+- id: mock
+  name: "./mock-llm.ts"
+- id: sessions
+  name: "@deepseek-ai/dsh-session"
+- id: projections
+  name: "@deepseek-ai/dsh-session-projection"
+- id: prompt
+  name: "@deepseek-ai/dsh-system-prompt"
+- id: tools
+  name: "@deepseek-ai/dsh-tools"
+- id: native-executor
+  name: "@deepseek-ai/dsh-tool-executor-native"
+- id: agents
+  name: "@deepseek-ai/dsh-agent"
+- id: loop
+  name: "@deepseek-ai/dsh-agent-loop"
+  config:
+    agents: []
+- id: default-model
+  name: "@deepseek-ai/dsh-agent-default-model"
+  config:
+    provider: mock
+    model: mock
+- id: persistence
+  name: "@deepseek-ai/dsh-session-persistence-jsonl"
+  config:
+    root: !!js dshHomePath('sessions')
+- id: query
+  name: "./point-query.ts"
+- id: sandbox
+  name: "@deepseek-ai/dsh-sandbox-policy"
+  config:
+    mode: danger-full-access
+    workspaceRoot: !!js process.env.KMH_KONGMING_PROJECT_DIR
+- id: fs
+  name: "@deepseek-ai/dsh-fs-sandbox"
+  config:
+    cwd: !!js process.env.KMH_KONGMING_PROJECT_DIR
+- id: working-directory
+  name: "./working-directory.ts"
+- id: tool-fs
+  name: "@deepseek-ai/dsh-tool-fs"
+- id: approvals
+  name: "@deepseek-ai/dsh-user-approval"
+- id: storage
+  name: "@deepseek-ai/dsh-storage"
+- id: storage-json
+  name: "@deepseek-ai/dsh-storage-json"
+  config:
+    root: !!js dshHomePath('storage')
+- id: storage-domain
+  name: "@deepseek-ai/dsh-storage-domain"
+  config:
+    backend: json
+- id: workspace
+  name: "@deepseek-ai/dsh-workspace"
+- id: attachments
+  name: "@deepseek-ai/dsh-attachment-local"
+- id: credentials
+  name: "@deepseek-ai/dsh-credentials-local"
+  config:
+    dshHome: !!js process.env.DSH_HOME
+- id: typert
+  name: "@deepseek-ai/dsh-typert-registry"
+- id: typert-loader
+  name: "@deepseek-ai/dsh-typert-loader"
+- id: remote-access
+  name: "@deepseek-ai/dsh-api-remote-access"
+- id: gateway
+  name: "@deepseek-ai/dsh-api-gateway"
+- id: connection
+  name: "@deepseek-ai/dsh-client-connection"
+- id: commands
+  name: "@deepseek-ai/dsh-commands"
+- id: file-upload
+  name: "@deepseek-ai/dsh-client-file-upload"
+- id: session-controller
+  name: "@deepseek-ai/dsh-api-session-controller"
+- id: workspace-controller
+  name: "@deepseek-ai/dsh-api-workspace-controller"
+- id: session-title
+  name: "@deepseek-ai/dsh-session-title"
+  config:
+    fallbackMaxWords: 5
+    fallbackMaxBytes: 40
+    maxTitleBytes: 80
+- id: session-reference
+  name: "@deepseek-ai/dsh-session-reference"
+- id: file-reference
+  name: "@deepseek-ai/dsh-file-reference-local"
+- id: api-remotes
+  name: "@deepseek-ai/dsh-api-remotes"
+- id: webserver
+  name: "@deepseek-ai/dsh-host-webserver"
+  config:
+    host: 127.0.0.1
+    port: 0
+- id: web-runtime
+  name: "@deepseek-ai/dsh-web-app"
+  config:
+    openBrowser: false
+    printUrl: false
+    surfaceContext: false
+- id: modules
+  name: "@deepseek-ai/dsh-client-modules"
+- id: locale
+  name: "@deepseek-ai/dsh-client-locale"
+- id: shortcuts
+  name: "@deepseek-ai/dsh-client-shortcuts"
+- id: theme
+  name: "@deepseek-ai/dsh-client-ui-theme"
+- id: renderer
+  name: "@deepseek-ai/dsh-client-ui-renderer"
+- id: ui-layout
+  name: "@deepseek-ai/dsh-client-ui-layout"
+- id: ui-session
+  name: "@deepseek-ai/dsh-client-ui-session"
+- id: ui-workspace
+  name: "@deepseek-ai/dsh-client-ui-workspace"
+- id: ui-sidebar
+  name: "@deepseek-ai/dsh-client-ui-sidebar"
+- id: ui-conversation
+  name: "@deepseek-ai/dsh-client-ui-conversation"
+- id: ui-chat
+  name: "@deepseek-ai/dsh-client-ui-chat"
+- id: ui-tool
+  name: "@deepseek-ai/dsh-client-ui-tool"
+- id: ui-input-trigger
+  name: "@deepseek-ai/dsh-client-ui-input-trigger"
+- id: settings-controller
+  name: "@deepseek-ai/dsh-api-settings-controller"
+- id: ui-settings
+  name: "@deepseek-ai/dsh-client-ui-settings"
+- id: resources
+  name: "@deepseek-ai/dsh-client-resources"
+- id: ui-sidebar-right
+  name: "@deepseek-ai/dsh-client-ui-sidebar-right"
+- id: directory-picker
+  name: "@deepseek-ai/dsh-host-directory-picker-browse"
