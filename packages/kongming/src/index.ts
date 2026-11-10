@@ -11,6 +11,9 @@ export const name = "kmh-kongming";
 /** 会话与工具使用当前 Web 的生产服务。 */
 export const inject = [
   "agents",
+  "attachments",
+  "llm",
+  "tools",
   "sessions",
   "systemPrompt",
   "sessionController",

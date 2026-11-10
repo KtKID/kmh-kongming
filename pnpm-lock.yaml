@@ -72,6 +72,9 @@ importers:
       '@deepseek-ai/dsh-app-boot':
         specifier: 0.2.2-alpha.2
         version: 0.2.2-alpha.2(@deepseek-ai/cordis-plugin-group@1.0.6-alpha.2(@deepseek-ai/cordis-plugin-loader@1.0.7-alpha.1)(@deepseek-ai/cordis@4.0.6-alpha.1))(@deepseek-ai/cordis-plugin-include@1.0.11-alpha.1)(@deepseek-ai/cordis-plugin-loader@1.0.7-alpha.1)(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-home-paths@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))(@deepseek-ai/dsh-launch-environment@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))
+      '@deepseek-ai/dsh-attachment':
+        specifier: 0.2.2-alpha.2
+        version: 0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-brand@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))
       '@deepseek-ai/dsh-attachment-local':
         specifier: 0.2.2-alpha.2
         version: 0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-attachment@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-brand@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)))(@deepseek-ai/dsh-home-paths@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))(@types/node@22.20.5)
@@ -231,6 +234,9 @@ importers:
       '@deepseek-ai/dsh-web-app':
         specifier: 0.2.2-alpha.2
         version: 0.2.2-alpha.2(79a0ff69ac80ac23da54b04ccc236918)
+      '@deepseek-ai/dsh-working-directory':
+        specifier: 0.2.2-alpha.2
+        version: 0.2.2-alpha.2(d5be6689d1b436c4ecc42e3e1a3e2260)
       '@deepseek-ai/dsh-workspace':
         specifier: 0.2.2-alpha.2
         version: 0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-session-persistence@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-brand@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))(@deepseek-ai/dsh-session@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-scope@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)))(@deepseek-ai/dsh-timeout@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)))(@deepseek-ai/dsh-session@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-scope@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)))(@deepseek-ai/dsh-storage-domain@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)(@deepseek-ai/dsh-storage@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1)))(@deepseek-ai/dsh-storage@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))(@deepseek-ai/dsh-typert-protocol@0.2.2-alpha.2(@deepseek-ai/cordis@4.0.6-alpha.1))

@@ -9,6 +9,7 @@ import type { Config } from "./config.ts";
 import { validateProjectDir, type RuntimePaths } from "./paths.ts";
 import { BindingStore } from "./state.ts";
 import { mountPrompt } from "./prompt.ts";
+import { mountDispatch } from "./dispatch.ts";
 import { KongmingControl } from "./control.ts";
 import type { Binding, EnsureResult } from "./protocol/index.ts";
 export type { RuntimePaths } from "./paths.ts";
@@ -22,7 +23,7 @@ export class KongmingRuntime {
   private closing: Promise<void> | undefined;
   private binding: Binding | undefined;
   private boundControl: KongmingControl | undefined;
-  private readonly prompts = new Map<Agent, () => void>();
+  private readonly agentBindings = new Map<Agent, () => void>();
   constructor(
     readonly ctx: Context,
     readonly config: Config,
@@ -108,8 +109,13 @@ export class KongmingRuntime {
     this.agent = agent;
     if (this.boundControl?.agent !== agent)
       this.boundControl = new KongmingControl(this.ctx, agent);
-    if (!this.prompts.has(agent)) {
-      this.prompts.set(agent, mountPrompt(agent, this.config));
+    if (!this.agentBindings.has(agent)) {
+      const offPrompt = mountPrompt(agent, this.config);
+      const offDispatch = mountDispatch(this.ctx, agent);
+      this.agentBindings.set(agent, () => {
+        offDispatch();
+        offPrompt();
+      });
     }
     this.ctx.emit("kongming/agent-ready", { agent });
   }
@@ -120,10 +126,10 @@ export class KongmingRuntime {
     return this.boundControl;
   }
   private async releaseAgent(agent: Agent): Promise<void> {
-    const release = this.prompts.get(agent);
+    const release = this.agentBindings.get(agent);
     if (release === undefined) return;
     release();
-    this.prompts.delete(agent);
+    this.agentBindings.delete(agent);
     if (this.boundControl?.agent === agent) {
       this.boundControl.dispose();
       this.boundControl = undefined;
@@ -149,6 +155,7 @@ export class KongmingRuntime {
       await agent.whenIdle();
       await this.ctx.sessions.flush(agent.session);
     }
-    for (const agent of this.prompts.keys()) await this.releaseAgent(agent);
+    for (const agent of this.agentBindings.keys())
+      await this.releaseAgent(agent);
   }
 }

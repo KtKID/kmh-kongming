@@ -7,6 +7,11 @@
 | `packages/kongming` | `@kmh/kongming` | 孔明固定会话、原生聊天与可选能力扩展；含 Web 侧栏面板 |
 | `packages/kongming-memory` | `@kmh/kongming-memory-v1` | 孔明独立记忆：冻结文件、完整加载与手动压缩刷新；对 `@kmh/kongming` 仅为可选类型依赖（事件声明） |
 
+## 功能规格
+
+- [孔明创建会话委派查询与来源展示（MVP）](docs/spec/kongming-session-dispatch-mvp/spec.md)：首版已实现；MiniMax-M2.7 真实天气委派、回传与孔明后续答复已通过会话日志核对，完整验收状态见开发回执。
+- [技术设计与 smoke 用例](docs/spec/kongming-session-dispatch-mvp/tech-design.md) · [开发清单](docs/spec/kongming-session-dispatch-mvp/tasks/task-session-dispatch/dev-checklist.md)。
+
 ## 独立开发
 
 devDependencies 使用 npm 发布版 `@deepseek-ai/dsh-*`（钉底座版本 `0.2.2-alpha.2` 线），本仓离开 kongming-os 检出即可安装构建：

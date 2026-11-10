@@ -11,9 +11,16 @@ import { IconSparkleRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { PropsRuntime } from "@deepseek-ai/dsh-client-ui-slots";
 import { EnsureResultSchema, FailureSchema } from "../protocol/index.ts";
 import { KongmingPanel } from "./KongmingPanel.tsx";
+import { mountDispatchView } from "./dispatch.tsx";
 import { zh, en, type KongmingLocaleKey } from "./locales.ts";
 /** 浏览器半的公开服务依赖。 */
-export const inject = ["slots", "locale", "sessions", "uiWorkspace"];
+export const inject = [
+  "slots",
+  "locale",
+  "sessions",
+  "uiWorkspace",
+  "uiConversation",
+];
 const PANEL_ID = brandString<MainPanelId>("kmh-kongming");
 declare module "@deepseek-ai/dsh-client-ui-slots" {
   interface LocaleNamespaceMap {
@@ -26,6 +33,7 @@ function KongmingIcon({ size }: PropsRuntime<"sidebar.panellist">) {
 /** @param ctx - 浏览器插件的生命周期上下文。 */
 export function apply(ctx: Context): void {
   ctx.effect(() => ctx.locale.register("kongming", { zh, en }));
+  mountDispatchView(ctx);
   const t = ctx.locale.bind("kongming");
   const prepare = async (signal: AbortSignal): Promise<void> => {
     const response = await fetch("/api/kmh-kongming/ensure", {
