@@ -1,0 +1,203 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "孔明会话委派与结果回传",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      1080,
+      508
+    ],
+    "legend": {
+      "entries": {
+        "emphasis": {
+          "label": "关键调用"
+        },
+        "dashed": {
+          "label": "原生事件与异步回传"
+        },
+        "return": {
+          "label": "调用回执"
+        }
+      }
+    }
+  },
+  "participants": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "用户",
+      "sublabel": "孔明聊天"
+    },
+    {
+      "id": "source",
+      "type": "backend",
+      "label": "孔明会话",
+      "sublabel": "源 Agent"
+    },
+    {
+      "id": "tools",
+      "type": "backend",
+      "label": "委派工具",
+      "sublabel": "tools.ts"
+    },
+    {
+      "id": "relay",
+      "type": "messagebus",
+      "label": "委派跟踪器",
+      "sublabel": "relay.ts"
+    },
+    {
+      "id": "host",
+      "type": "backend",
+      "label": "DSH 会话服务",
+      "sublabel": "原生会话与工作区"
+    },
+    {
+      "id": "target",
+      "type": "backend",
+      "label": "目标会话",
+      "sublabel": "新建的普通 Agent"
+    }
+  ],
+  "segments": [
+    {
+      "from": 144,
+      "to": 308,
+      "label": "① 准备、入队与领取"
+    },
+    {
+      "from": 314,
+      "to": 370,
+      "label": "② 跟踪目标轮次"
+    },
+    {
+      "from": 376,
+      "to": 430,
+      "label": "③ 异步回传"
+    }
+  ],
+  "messages": [
+    {
+      "id": "request",
+      "from": "user",
+      "to": "source",
+      "y": 164,
+      "label": "提出委派任务"
+    },
+    {
+      "id": "tool-call",
+      "from": "source",
+      "to": "tools",
+      "y": 188,
+      "label": "kongming_dispatch",
+      "variant": "emphasis",
+      "note": "孔明可先用 kongming_list_models 查询模型目录，再以精确的 provider 和 model ID 发起委派。"
+    },
+    {
+      "id": "prepare",
+      "from": "tools",
+      "to": "host",
+      "y": 214,
+      "label": "校验输入，创建 Session 并解析 Agent",
+      "note": "prepareDispatch 校验内容、附件归属、模型和工作目录。接纳附件后创建工作区和普通 Session，解析目标 Agent 并为它选定模型。工具再次确认源 Agent 有效后才入队。"
+    },
+    {
+      "id": "start-relay",
+      "from": "tools",
+      "to": "relay",
+      "y": 242,
+      "label": "enqueue(target, content)",
+      "variant": "emphasis",
+      "note": "生成 dispatchId 和原生用户消息。先订阅领取、移除、会话事件和目标释放，再调用目标 Agent。"
+    },
+    {
+      "id": "send",
+      "from": "relay",
+      "to": "target",
+      "y": 270,
+      "label": "target.followup(kongming-dispatch)",
+      "variant": "emphasis",
+      "note": "消息携带来源会话、目标会话和 dispatchId。内容以委派来源前缀开头，其后是原始任务内容。"
+    },
+    {
+      "id": "queued",
+      "from": "tools",
+      "to": "source",
+      "y": 300,
+      "label": "回执 status = queued",
+      "variant": "return",
+      "note": "工具回执携带 dispatchId、sessionId、provider 和 model，确认入队。原生调度决定目标何时领取，图中并排表示两者各自发生。"
+    },
+    {
+      "id": "claimed",
+      "from": "target",
+      "to": "relay",
+      "y": 300,
+      "label": "agent/inbox/claimed",
+      "variant": "dashed",
+      "note": "目标空闲时 followup 会唤醒执行。跟踪器核对目标 Agent 和消息 ID，记录实际领取轮次。"
+    },
+    {
+      "id": "assistant-message",
+      "from": "target",
+      "to": "relay",
+      "y": 332,
+      "label": "assistant/message · 保存该轮最后一条",
+      "variant": "dashed",
+      "note": "只观察已领取的目标轮次。每条助手消息替换上次快照，只保留非空白文本、图片和文件。"
+    },
+    {
+      "id": "terminal",
+      "from": "target",
+      "to": "relay",
+      "y": 360,
+      "label": "turn/end · 确定该轮终态",
+      "variant": "dashed",
+      "note": "完成且最后一条有公开内容时取正文。出错、中断或完成但正文为空时生成对应状态说明。"
+    },
+    {
+      "id": "reply",
+      "from": "relay",
+      "to": "source",
+      "y": 390,
+      "label": "source.followup(kongming-reply)",
+      "variant": "dashed",
+      "note": "先移除待回传记录、注销监听，再确认源 Agent 仍有效。使用同一 dispatchId 将正文或状态作为原生后续消息排回孔明。"
+    },
+    {
+      "id": "user-reply",
+      "from": "source",
+      "to": "user",
+      "y": 418,
+      "label": "消费回传后答复用户",
+      "variant": "emphasis",
+      "note": "孔明从自己的原生队列消费回传，再由模型整理为用户答复。源会话忙时，回传等待后续消费。"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "回执与回传",
+      "items": [
+        "queued 确认入队。kongming-reply 携带正文或终态说明，两条消息通过 dispatchId 关联。"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "排队取消与提前关闭",
+      "items": [
+        "领取前真正移除会回传取消。编辑或转入当前轮保留消息 ID，继续跟踪。目标提前关闭时回传关闭状态。"
+      ]
+    },
+    {
+      "dot": "slate",
+      "title": "跟踪器生命周期",
+      "items": [
+        "跟踪状态保存在当前进程。孔明插件卸载时释放全部待回传监听。"
+      ]
+    }
+  ]
+}
