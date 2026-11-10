@@ -3,6 +3,7 @@ import type { Context } from "@deepseek-ai/cordis";
 import type { Agent } from "@deepseek-ai/dsh-agent";
 import { resolveDshHome } from "@deepseek-ai/dsh-home-paths";
 import {
+  appendOriginalFile,
   initializeMemoryFiles,
   readFrozenFile,
   replaceFrozenFile,
@@ -12,6 +13,7 @@ import { mountFrozenPrompt } from "./prompt.ts";
 import { Config } from "./config.ts";
 import { mountMemoryReminder } from "./steer.ts";
 import { mountCompactionRefresh } from "./compaction.ts";
+import { mountMemoryTool } from "./tool.ts";
 import { mountKongmingMemory } from "./kongming.ts";
 import type { KongmingMemoryV1, MemoryFiles } from "./types.ts";
 export type { KongmingMemoryV1, MemoryFiles } from "./types.ts";
@@ -59,6 +61,8 @@ export function createMemoryService(
       await writing;
       return readFrozenFile(files, signal);
     },
+    appendOriginal: (content, signal) =>
+      enqueue(() => appendOriginalFile(files, content, signal)),
     refreshFrozen: (result, signal) =>
       enqueue(async () => {
         if (publishedId === result.compactionId) return;
@@ -70,6 +74,7 @@ export function createMemoryService(
       const existing = bindings.get(agent);
       if (existing !== undefined) return existing;
       const releasePrompt = mountFrozenPrompt(agent, memory, promptConfig);
+      const releaseTool = mountMemoryTool(agent, memory);
       const releaseReminder = mountMemoryReminder(
         agent,
         files,
@@ -78,6 +83,7 @@ export function createMemoryService(
       const releaseCompaction = mountCompactionRefresh(agent, memory);
       const release = async (): Promise<void> => {
         releaseReminder();
+        releaseTool();
         releasePrompt();
         bindings.delete(agent);
         await releaseCompaction();

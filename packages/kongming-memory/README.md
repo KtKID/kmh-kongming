@@ -6,7 +6,7 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 ## 概述
 
-`@kmh/kongming-memory-v1` 为孔明提供稳定的冻结记忆。每次启动绑定孔明会话时，插件把原始记忆的当前完整内容发布为冻结记忆；原始为空时保留已有冻结版本。启用期间，每次模型提示词装配读取完整冻结正文，日常新增与修改保存到原始文件。手动 `/compact` 成功后发布新版冻结文件，后续读取等待发布完成。
+`@kmh/kongming-memory-v1` 为孔明提供稳定的冻结记忆。每次启动绑定孔明会话时，插件把原始记忆的当前完整内容发布为冻结记忆；原始为空时保留已有冻结版本。启用期间，每次模型提示词装配读取完整冻结正文，日常新增经孔明专属保存工具追加到原始文件。手动 `/compact` 成功后发布新版冻结文件，后续读取等待发布完成。
 
 ## 目录
 
@@ -50,15 +50,13 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 `promptTemplate` 必须包含 `{{originalMemoryPath}}`、`{{frozenMemoryPath}}`、`{{frozenMemory}}`，分别填入原始路径、冻结路径和完整冻结正文。缺少变量、空模板或错误类型会使配置校验失败。变量替换只执行一次，冻结正文中的花括号、美元符号和其他模板样式保持原文。
 
-`reminderPrompt` 支持 `{{originalMemoryPath}}` 与 `{{frozenMemoryPath}}`。默认安装文案包含“每次完成对话或完成任务后，把有价值的内容和踩坑记录到记忆文件里”，并说明读取原始文件、保留已有条目、合并重复内容和按实际工具结果反馈。该文案在收尾事件中送达；系统记忆模板承担路径和冻结正文的装配。
+`reminderPrompt` 支持 `{{originalMemoryPath}}` 与 `{{frozenMemoryPath}}`。默认安装文案包含“每次完成对话或完成任务后，把有价值的内容和踩坑记录到记忆文件里”，并说明先判断长期价值（寒暄、天气等无关紧要的内容不记录）、需要记录时调用 `kongming_memory_save` 追加一条可独立理解的新条目、该工具只能新增不能修改删除，以及按实际工具结果反馈。该文案在收尾事件中送达；系统记忆模板承担路径和冻结正文的装配。
 
 ## 收尾记录与写入权限
 
 普通任务准备结束时，插件在 `agent/turn-stopping` 事件中追加一次 steer。这个时机位于 `turn/end` 之前，提醒继续当前轮的后续步骤。每个会话每轮最多提醒一次；历史消息和已接纳队列中的来源记录共同用于去重。该轮出现过 `max-tokens` 时跳过提醒，执行错误与取消沿实际循环的收尾处理。
 
-模型接到提醒后，通过当前 Agent 已有的 `read`、`write`、`edit` 工具维护原始文件，长期价值选择和合并由模型完成。这些通用文件工具由 DSH 文件插件提供，注册和权限随对应工具插件管理。记忆插件负责文件准备、冻结读取与发布，以及维护提醒。
-
-原始记忆通常位于项目工作区之外。使用 `workspace-write` 的部署可能遇到拒绝或单次审批，审批通过后才可按该次授权写入；操作系统文件可写与 Agent 工具获准写入需要分别核对。保存结果以实际工具回执与文件内容为准，失败原因应向用户说明。部署排查可参考记忆写入诊断中的权限证据。
+模型接到提醒后，通过插件注册的孔明专属 `kongming_memory_save` 工具把新条目交给记忆服务；该工具仅追加、空白条目拒绝，不提供修改或删除已有记忆的入口，也只在孔明 Agent 作用域可用。工具在插件进程内经服务串行队列执行，直接写原始文件，不经过 DSH 文件沙箱，因此原始记忆位于项目工作区之外也不会触发逐次审批。长期价值选择由模型完成；保存结果以实际工具回执与文件内容为准，失败原因应向用户说明。
 
 ## 可选生命周期
 
@@ -102,17 +100,18 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 以下脚本分别承担配置、文件、事件和清理。公开服务定义在 `src/types.ts`，调用方据此取得两份路径并等待初始化、读取或刷新结果。
 
-| 文件                                   | 作用、处理与关键函数                                                                                                                                                                                                     |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [src/config.ts](src/config.ts)         | `Config` 校验三项必需模板变量与字符串类型，提供最小模板和空提醒默认值。                                                                                                                                                  |
-| [src/index.ts](src/index.ts)           | `apply()` 解析 home 并提供 `kongmingMemoryV1`；`createMemoryService()` 串行管理初始化与发布，`readFrozen()` 等待当前队列，`bindAgent()` 接入三个功能，`close()` 释放绑定并等待自身工作。                                 |
-| [src/types.ts](src/types.ts)           | 定义 `MemoryFiles` 与 `KongmingMemoryV1` 服务，声明提醒来源中的会话 ID 和轮次，供装配、去重与调用方共用。                                                                                                                |
-| [src/kongming.ts](src/kongming.ts)     | `mountKongmingMemory()` 订阅就绪、访问已有 Agent 和分离事件。每个 Agent 保留一份准备与释放记录，后装能力可接回原会话，清理函数幂等。初始化失败由读取路径和诊断日志报告。                                                 |
-| [src/files.ts](src/files.ts)           | `resolveMemoryFiles(home)` 校验绝对路径；`initializeMemoryFiles()` 补齐原始文件，并独占发布首次冻结；`readFrozenFile()` 完整读取 UTF-8；`replaceFrozenFile()` 经同目录临时文件原子发布原始字节。文件错误保留路径和原因。 |
-| [src/prompt.ts](src/prompt.ts)         | `mountFrozenPrompt()` 为指定 Agent 绑定装配并返回清理函数。`assembleFrozenPrompt()` 委托现有段落，等待完整冻结读取，再单次替换模板；卸载活动标记覆盖等待前后，保留基础组装结果。                                         |
-| [src/steer.ts](src/steer.ts)           | `mountMemoryReminder()` 监听收尾并检查轮次保护；`hasMemoryReminder()` 检查历史和已接纳队列证据；`createMemoryReminder()` 填入路径并标注来源。文件维护由收到提醒的模型及通用工具执行。                                    |
-| [src/compaction.ts](src/compaction.ts) | `mountCompactionRefresh()` 根据成功回执的 `sourceEventSeq` 定位摘要，核对同一命令与压缩 ID 的 start/end；`refreshAfterCompaction()` 等待服务完整发布。清理等待已发起的刷新结束。                                         |
-| [build.ts](build.ts)                   | `buildPlugin()` 清理 `lib` 并调用严格 TypeScript 构建，输出运行代码和声明；编译失败向调用方保留诊断。                                                                                                                    |
+| 文件                                   | 作用、处理与关键函数                                                                                                                                                                                                                                                          |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [src/config.ts](src/config.ts)         | `Config` 校验三项必需模板变量与字符串类型，提供最小模板和空提醒默认值。                                                                                                                                                                                                       |
+| [src/index.ts](src/index.ts)           | `apply()` 解析 home 并提供 `kongmingMemoryV1`；`createMemoryService()` 串行管理初始化、追加与发布，`readFrozen()` 等待队列，`bindAgent()` 接入四个功能，`close()` 释放绑定并等待自身工作。                                                                                    |
+| [src/types.ts](src/types.ts)           | 定义 `MemoryFiles` 与 `KongmingMemoryV1` 服务，声明提醒来源中的会话 ID 和轮次，供装配、去重与调用方共用。                                                                                                                                                                     |
+| [src/kongming.ts](src/kongming.ts)     | `mountKongmingMemory()` 订阅就绪、访问已有 Agent 和分离事件。每个 Agent 保留一份准备与释放记录，后装能力可接回原会话，清理函数幂等。初始化失败由读取路径和诊断日志报告。                                                                                                      |
+| [src/files.ts](src/files.ts)           | `resolveMemoryFiles(home)` 校验绝对路径；`initializeMemoryFiles()` 补齐原始文件，并独占发布首次冻结；`appendOriginalFile()` 仅追加非空白条目并按需补分隔；`readFrozenFile()` 完整读取 UTF-8；`replaceFrozenFile()` 经同目录临时文件原子发布原始字节。文件错误保留路径和原因。 |
+| [src/tool.ts](src/tool.ts)             | `mountMemoryTool()` 在孔明 Agent 作用域注册 `kongming_memory_save`；工具仅追加、限制调用方并返回保存回执，随绑定释放注销。                                                                                                                                                    |
+| [src/prompt.ts](src/prompt.ts)         | `mountFrozenPrompt()` 为指定 Agent 绑定装配并返回清理函数。`assembleFrozenPrompt()` 委托现有段落，等待完整冻结读取，再单次替换模板；卸载活动标记覆盖等待前后，保留基础组装结果。                                                                                              |
+| [src/steer.ts](src/steer.ts)           | `mountMemoryReminder()` 监听收尾并检查轮次保护；`hasMemoryReminder()` 检查历史和已接纳队列证据；`createMemoryReminder()` 填入路径并标注来源。文件维护由收到提醒的模型及通用工具执行。                                                                                         |
+| [src/compaction.ts](src/compaction.ts) | `mountCompactionRefresh()` 根据成功回执的 `sourceEventSeq` 定位摘要，核对同一命令与压缩 ID 的 start/end；`refreshAfterCompaction()` 等待服务完整发布。清理等待已发起的刷新结束。                                                                                              |
+| [build.ts](build.ts)                   | `buildPlugin()` 清理 `lib` 并调用严格 TypeScript 构建，输出运行代码和声明；编译失败向调用方保留诊断。                                                                                                                                                                         |
 
 ### 测试与取证
 
@@ -123,7 +122,8 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 | [test/fixtures/mock-host.ts](test/fixtures/mock-host.ts)、[config.ts](test/fixtures/config.ts)                               | 建立私有测试宿主，加载实际安装配置和有限模型脚本，提供手动压缩与文件工具链路。                                                     |
 | [test/main-flow.test.ts](test/main-flow.test.ts)                                                                             | M01–M08：首次冻结、启动重发、原始修改隔离、服务重建、两次手动压缩刷新、空冻结自愈和原始为空保留冻结。                              |
 | [test/prompt-config.test.ts](test/prompt-config.test.ts)                                                                     | P05–P06：完整模板、字面量保持与无效配置拒绝。                                                                                      |
-| [test/turn-reminder.test.ts](test/turn-reminder.test.ts)                                                                     | R01–R06：同轮真实文件工具、去重、输出上限、错误取消、重新绑定与配置空值。                                                          |
+| [test/turn-reminder.test.ts](test/turn-reminder.test.ts)                                                                     | R01–R06：同轮保存工具、去重、输出上限、错误取消、重新绑定与配置空值。                                                              |
+| [test/memory-tool.test.ts](test/memory-tool.test.ts)                                                                         | T01–T04：收尾提醒引导工具追加、空白条目拒绝、分隔与串行落盘、普通 Agent 越权失败。                                                 |
 | [孔明可选记忆测试](../kmh-kongming/test/optional-memory.test.ts)                                                             | O01–O05：基础孔明独立运行，记忆在执行或组装等待期间卸载，后装/重装及准备失败后的移除。默认 mock 路由覆盖开头系统提示词的替换模式。 |
 | [冻结骨架](test/frozen-memory.test.ts)、[边界骨架](test/frozen-memory-boundaries.test.ts)、[提醒骨架](test/reminder.test.ts) | 保留 48 个设计编号；各变体的实施状态由测试设计维护。                                                                               |
 
@@ -136,11 +136,11 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 ## 验证入口
 
-在仓库根目录构建并执行记忆主链路测试。成功结果应包括文件、模板和收尾提醒断言通过；文件工具和价值判断的模型决策由脚本固定。
+在仓库根目录构建并执行记忆主链路测试。成功结果应包括文件、模板、保存工具和收尾提醒断言通过；工具调用与价值判断的模型决策由脚本固定。
 
 ```sh
-node packages/kongming-memory-v1/build.ts
-node --test packages/kongming-memory-v1/test/main-flow.test.ts packages/kongming-memory-v1/test/prompt-config.test.ts packages/kongming-memory-v1/test/turn-reminder.test.ts
+node packages/kongming-memory/build.ts
+node --test packages/kongming-memory/test/main-flow.test.ts packages/kongming-memory/test/prompt-config.test.ts packages/kongming-memory/test/turn-reminder.test.ts packages/kongming-memory/test/memory-tool.test.ts
 ```
 
 孔明可选插件生命周期的构建与测试入口见[孔明开发验证](../kmh-kongming/README.md#开发验证)。包的 `typecheck`、`lint`、`format:check` 检查源码、测试、构建和配置。真实模型的信息价值判断、合并与摘要质量需要真实模型验收；上述流程测试覆盖确定性的事件、文件和请求链路。

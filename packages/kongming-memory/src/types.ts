@@ -16,13 +16,13 @@ declare module "@deepseek-ai/dsh-llm" {
 
 /** 两份记忆文件的绝对路径；目录规则沿用当前孔明 home。 */
 export interface MemoryFiles {
-  /** 助手通过现有文件工具维护的原始记忆。 */
+  /** 原始记忆；保存工具仅向末尾追加新条目，不提供覆盖入口。 */
   readonly original: string;
   /** 提示词每次完整读取、由插件复制发布的冻结记忆。 */
   readonly frozen: string;
 }
 
-/** 可选的独立记忆服务，负责冻结加载、收尾提醒与手动压缩刷新。 */
+/** 可选的独立记忆服务，负责冻结加载、收尾提醒、保存工具与手动压缩刷新。 */
 export interface KongmingMemoryV1 {
   /** 当前插件实例拥有的两份文件路径。 */
   readonly files: MemoryFiles;
@@ -30,9 +30,11 @@ export interface KongmingMemoryV1 {
   initialize(signal?: AbortSignal): Promise<void>;
   /** 等待当前发布完成并读取完整冻结正文；读取失败直接拒绝。 */
   readFrozen(signal?: AbortSignal): Promise<string>;
+  /** 将一条非空白新条目排入串行队列并追加到原始文件末尾；失败保留原文件并拒绝。 */
+  appendOriginal(content: string, signal?: AbortSignal): Promise<void>;
   /** 接受已成功完成的压缩结果并完整刷新；失败保留完整旧版并拒绝。 */
   refreshFrozen(result: CompactionResult, signal?: AbortSignal): Promise<void>;
-  /** 为指定孔明 Agent 绑定冻结提示、同轮收尾提醒与手动刷新；返回异步清理入口。 */
+  /** 为指定孔明 Agent 绑定冻结提示、保存工具、同轮收尾提醒与手动刷新；返回异步清理入口。 */
   bindAgent(agent: Agent): () => Promise<void>;
   /** 释放监听并等待文件工作收敛；清理错误向调用者传播。 */
   close(): Promise<void>;

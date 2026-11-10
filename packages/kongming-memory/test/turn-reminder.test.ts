@@ -137,24 +137,20 @@ async function fixture(
   }
 }
 
-await test("R01 / S01/S02/S04：系统只加载记忆上下文，任务收尾后同轮提醒并用真实文件工具保存 raw", async () => {
+await test("R01 / S01/S02/S04：系统只加载记忆上下文，任务收尾后同轮提醒并经保存工具追加条目", async () => {
   await fixture(
-    (files) => [
+    () => [
       textReply("任务已完成"),
-      toolReply("read", { file_path: files.original }, "read"),
       toolReply(
-        "write",
-        {
-          file_path: files.original,
-          content: frozen + "新偏好：先列验收标准\n",
-        },
-        "write",
+        "kongming_memory_save",
+        { content: "新偏好：先列验收标准" },
+        "save",
       ),
       textReply("已保存偏好"),
     ],
     async (host) => {
       await send(host, "以后先列验收标准");
-      assert.equal(host.requests.length, 4);
+      assert.equal(host.requests.length, 3);
       assert.equal(reminders(host).length, 1);
       assert.ok(content(requestAt(host, 1), "user").includes(instruction));
       for (const request of host.requests) {

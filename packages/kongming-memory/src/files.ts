@@ -50,6 +50,41 @@ export async function initializeMemoryFiles(
   await publish(files, initial, signal);
 }
 
+/** 将一条非空白条目追加到原始文件末尾，只在缺少换行处补分隔；不提供任何覆盖或删除入口。 */
+export async function appendOriginalFile(
+  files: MemoryFiles,
+  content: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  signal?.throwIfAborted();
+  const entry = content.trim();
+  if (entry.length === 0) throw Error("记忆条目不能为空");
+  let separator = "";
+  try {
+    const existing = await readFile(files.original, {
+      encoding: "utf8",
+      signal,
+    });
+    if (existing.length > 0 && !existing.endsWith("\n")) separator = "\n";
+  } catch (error) {
+    throw Error(`原始记忆读取失败 ${files.original}：${String(error)}`, {
+      cause: error,
+    });
+  }
+  try {
+    // 追加旗标让 writeFile 承担 appendFile 语义，同时保留信号取消支持。
+    await writeFile(files.original, `${separator}${entry}\n`, {
+      flag: "a",
+      mode: 0o600,
+      signal,
+    });
+  } catch (error) {
+    throw Error(`原始记忆追加失败 ${files.original}：${String(error)}`, {
+      cause: error,
+    });
+  }
+}
+
 /** @returns 当前冻结文件完整 UTF-8 正文。 @throws 读取失败时附完整路径，文件保持原样。 */
 export async function readFrozenFile(
   files: MemoryFiles,
