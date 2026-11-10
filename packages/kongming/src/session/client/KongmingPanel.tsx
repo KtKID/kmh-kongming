@@ -10,7 +10,7 @@ import type {
   PropsRuntime,
 } from "@deepseek-ai/dsh-client-ui-slots";
 import type {} from "@deepseek-ai/dsh-client-ui-renderer/client";
-/** 准备函数由注册侧关闭服务依赖。 */
+/** 面板通过注册侧注入的动作准备会话。 */
 export interface KongmingPanelFace {
   prepare: (signal: AbortSignal) => Promise<void>;
 }
@@ -18,17 +18,20 @@ type PanelProps = PropsRuntime<"main"> &
   PropsLocale<"kongming"> &
   InjectFace<KongmingPanelFace>;
 type PanelState = { kind: "loading" } | { kind: "failed"; message: string };
-/** @param props - 面板份额、准备动作和词典。 @returns 固定会话或原位重试状态。 */
+/** 在原位展示准备状态，失败时提供原因和重试入口。 */
 export function KongmingPanel({ prepare, t }: PanelProps): ReactNode {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<PanelState>({ kind: "loading" });
+  // 首次打开和点击重试时各启动一次可取消的准备请求。
   useEffect(() => {
     const controller = new AbortController();
     setState({ kind: "loading" });
+    // 只有仍在等待的面板才展示本次失败。
     prepare(controller.signal).catch((error: unknown) => {
       if (!controller.signal.aborted)
         setState({ kind: "failed", message: String(error) });
     });
+    // 离开面板或重新发起请求时取消旧请求。
     return () => {
       controller.abort();
     };
@@ -64,9 +67,13 @@ export function KongmingPanel({ prepare, t }: PanelProps): ReactNode {
             {state.message}
           </span>
           <Button
-            onClick={() => {
-              setAttempt((value) => value + 1);
-            }}
+            onClick={
+              // 点击重试后让准备请求重新执行。
+              () => {
+                // 基于当前计数累加，确保每次点击都有新的尝试编号。
+                setAttempt((value) => value + 1);
+              }
+            }
           >
             {t("retry")}
           </Button>

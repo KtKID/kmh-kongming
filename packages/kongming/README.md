@@ -43,7 +43,7 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 启动时，插件读取已有身份，为已加载或后续恢复的同身份 Agent 绑定孔明提示词。并发准备请求共用一次操作，失败后可重试。目录配置缺失、目录与已绑定路径冲突、身份损坏或会话恢复失败时，入口显示具体原因和重试按钮；修复报错所指的目录或文件后重试。已有身份与会话文件保留，项目目录需要与身份文件中的绑定保持一致。
 
-已鉴权的 `POST /api/kmh-kongming/ensure` 接受空对象，成功返回 `sessionId` 和 `cwd`。失败响应为 HTTP 400，包含 `code: KONGMING_PREPARE_FAILED`、可读原因和 `retryable`；响应使用 `no-store`。协议定义见 [src/protocol/index.ts](src/protocol/index.ts)。
+已鉴权的 `POST /api/kmh-kongming/ensure` 接受空对象，成功返回 `sessionId` 和 `cwd`。失败响应为 HTTP 400，包含 `code: KONGMING_PREPARE_FAILED`、可读原因和 `retryable`；响应使用 `no-store`。协议定义见 [src/session/protocol.ts](src/session/protocol.ts)。
 
 停用孔明本体时，插件取消当前执行、等待空闲并保存会话，同一宿主中尚待处理的消息继续保留。重新启用后沿用固定身份。整服务退出时，底座当前会清空待处理队列；已完成和已中断的历史继续保存。停服前请处理完队列，或另行保留待发送内容。
 
@@ -58,7 +58,7 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 | `resume`     | —                                | 以原消息身份唤醒队列，保留顺序；空队列保持空闲，连续调用沿用同一驱动。                         |
 | `supplement` | `text`                           | 通过 `Agent.inject()` 为最近的后续步骤提供用户文本；空闲时等待后续唤醒，已开始的请求照常完成。 |
 
-`text` 需要包含非空白内容。宿主插件先调用 `ctx.kongming.ensure()`，再通过 `ctx.kongming.control` 调用 `prompt(text, mode, requestId)`、`cancel()`、`resume()` 或 `supplement(text)`；停用或释放后，原控制器拒绝新操作。控制方法实现在 [src/control.ts](src/control.ts)，边界 schema 集中在 [src/protocol/index.ts](src/protocol/index.ts)。原生聊天界面继续使用 DSH 的通用输入和停止操作；上述入口为调用方提供孔明自己的显式继续与补充本轮能力。
+`text` 需要包含非空白内容。宿主插件先调用 `ctx.kongming.ensure()`，再通过 `ctx.kongming.control` 调用 `prompt(text, mode, requestId)`、`cancel()`、`resume()` 或 `supplement(text)`；停用或释放后，原控制器拒绝新操作。控制方法实现在 [src/session/control.ts](src/session/control.ts)，边界 schema 集中在 [src/session/protocol.ts](src/session/protocol.ts)。原生聊天界面继续使用 DSH 的通用输入和停止操作；上述入口为调用方提供孔明自己的显式继续与补充本轮能力。
 
 ## 委派到普通会话
 
@@ -88,18 +88,18 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 以下文件共同负责准备、持久化与释放。文件读写或底座调用失败会沿准备接口返回；启动恢复失败会记录诊断，并保留入口重试路径。
 
-| 文件                                           | 作用、处理与关键函数                                                                                                                                                                                         |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [src/index.ts](src/index.ts)                   | `apply(ctx, config)` 解析运行路径并建立运行时，尝试恢复已有身份，提供服务并挂载 Web 路由。所需注入项均来自基础会话、提示词、工作区与连接服务。                                                               |
-| [src/config.ts](src/config.ts)                 | `Config` 校验两项字符串配置，并为缺省值提供空字符串；默认自然语言文案由安装 patch 拥有。                                                                                                                     |
-| [src/paths.ts](src/paths.ts)                   | `runtimePaths()` 读取 home 与项目目录环境配置；`validateProjectDir()` 校验绝对路径及目录访问，失败时带上目录与原因。                                                                                         |
-| [src/state.ts](src/state.ts)                   | `BindingStore.readExisting()` 读取已有身份；`loadOrReserve(cwd)` 通过临时文件和独占发布保留同一身份；`commit(binding)` 校验后原子替换状态文件。损坏内容保留并报告路径。                                      |
-| [src/session.ts](src/session.ts)               | `KongmingRuntime.ensure()` 合并并发准备，创建或恢复会话、等待保存、关联工作区并返回身份。`restoreExisting()` 接入已有身份；`bindPrompt()` 绑定人格并发布就绪事件；`close()` 等待准备和执行收敛，再释放绑定。 |
-| [src/prompt.ts](src/prompt.ts)                 | `mountPrompt(agent, config)` 在指定 Agent 作用域装配人格和系统配置原文，返回幂等清理函数。普通会话继续使用各自的提示词。                                                                                     |
-| [src/web.ts](src/web.ts)                       | `mountWeb(ctx, runtime)` 经现有鉴权连接登记准备接口，校验请求与响应，将准备错误转为可读失败响应。                                                                                                            |
-| [src/protocol/index.ts](src/protocol/index.ts) | `BindingSchema` 校验身份文件；`EnsureRequestSchema`、`EnsureResultSchema` 和 `FailureSchema` 供宿主、浏览器与测试共同校验边界数据。                                                                          |
-| [events.d.ts](events.d.ts)                     | `@kmh/kongming/events` 的类型入口，定义可选能力接入事件；消费者使用类型导入。                                                                                                                                |
-| [build.ts](build.ts)                           | 直接执行时清理 `lib`，编译宿主与浏览器声明，再打包客户端。`watchClient()` 首次构建后监听客户端依赖，返回异步关闭函数；初始化失败会释放构建器。                                                               |
+| 文件                                                         | 作用、处理与关键函数                                                                                                                                                                                                              |
+| ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [src/index.ts](src/index.ts)                                 | `apply(ctx, config)` 解析运行路径并建立运行时，尝试恢复已有身份，提供服务并挂载 Web 路由。所需注入项均来自基础会话、提示词、工作区与连接服务。                                                                                    |
+| [src/config.ts](src/config.ts)                               | `Config` 校验两项字符串配置，并为缺省值提供空字符串；默认自然语言文案由安装 patch 拥有。                                                                                                                                          |
+| [src/paths.ts](src/paths.ts)                                 | `runtimePaths()` 读取 home 与项目目录环境配置；`validateProjectDir()` 校验绝对路径及目录访问，失败时带上目录与原因。                                                                                                              |
+| [src/session/binding-store.ts](src/session/binding-store.ts) | 校验磁盘身份。读取已有身份，独占预留固定 ID，并在会话保存后原子更新状态文件。                                                                                                                                                     |
+| [src/session/runtime.ts](src/session/runtime.ts)             | `KongmingRuntime.ensure()` 合并并发准备，创建或恢复会话、等待保存、关联工作区并返回身份。`restoreExisting()` 接入已有身份；`bindAgent()` 挂载提示词、控制器和委派工具，再发布就绪事件；`close()` 等待准备和执行收敛，再释放绑定。 |
+| [src/session/prompt.ts](src/session/prompt.ts)               | `mountPrompt(agent, config)` 在指定 Agent 作用域装配人格和系统配置原文，返回幂等清理函数。普通会话继续使用各自的提示词。                                                                                                          |
+| [src/session/web.ts](src/session/web.ts)                     | 注册已鉴权的准备和控制接口，将校验或接纳错误转为可读响应。                                                                                                                                                                        |
+| [src/session/protocol.ts](src/session/protocol.ts)           | 固定会话准备和控制接口的请求、响应及失败校验。                                                                                                                                                                                    |
+| [events.d.ts](events.d.ts)                                   | `@kmh/kongming/events` 的类型入口，定义可选能力接入事件；消费者使用类型导入。                                                                                                                                                     |
+| [build.ts](build.ts)                                         | 直接执行时清理 `lib`，编译宿主与浏览器声明，再打包客户端。`watchClient()` 首次构建后监听客户端依赖，返回异步关闭函数；初始化失败会释放构建器。                                                                                    |
 
 ### 浏览器与验收脚本
 
@@ -107,8 +107,9 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 | 文件                                                                                                                         | 作用、处理与关键函数                                                                                                                                                            |
 | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [src/client/index.ts](src/client/index.ts)                                                                                   | `apply(ctx)` 注册词典、侧栏与准备面板；内部 `prepare(signal)` 调用准备接口、刷新会话目录，再执行 `uiWorkspace.openSession(sessionId)`。请求与卸载取消通过信号传递。             |
-| [src/client/KongmingPanel.tsx](src/client/KongmingPanel.tsx)                                                                 | `KongmingPanel()` 管理加载、失败与重试状态；面板退出时取消尚待完成的准备请求。                                                                                                  |
+| [src/client/index.ts](src/client/index.ts)                                                                                   | 注册共用词典、委派展示和固定会话入口。                                                                                                                                          |
+| [src/session/client/entry.ts](src/session/client/entry.ts)                                                                   | 注册侧栏与准备面板。请求宿主准备会话，刷新列表后交给原生导航打开。                                                                                                              |
+| [src/session/client/KongmingPanel.tsx](src/session/client/KongmingPanel.tsx)                                                 | `KongmingPanel()` 管理加载、失败与重试状态；面板退出时取消尚待完成的准备请求。                                                                                                  |
 | [src/client/locales.ts](src/client/locales.ts)                                                                               | 提供同键的中文与英文入口、重试和失败文案。                                                                                                                                      |
 | [test/browser.ts](test/browser.ts)                                                                                           | 启动私有 mock Web 环境，输出验收地址和临时目录信息；退出信号触发服务关闭与目录回收。                                                                                            |
 | [test/check-layout.ts](test/check-layout.ts)                                                                                 | 读取真实浏览器导出的尺寸 JSON，校验空会话居中、聊天输入区贴底与内部滚动；输入或布局异常时断言失败。                                                                             |

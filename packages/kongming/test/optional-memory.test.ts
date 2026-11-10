@@ -16,7 +16,7 @@ import { createUserMessage } from "@deepseek-ai/dsh-llm";
 import { SessionId } from "@deepseek-ai/dsh-session";
 import * as Memory from "@kmh/kongming-memory-v1";
 import * as Core from "../lib/src/index.js";
-import { KongmingRuntime } from "../lib/src/session.js";
+import { KongmingRuntime } from "../lib/src/session/runtime.js";
 import { defaultConfig, defaultMemoryConfig } from "./fixtures/config.ts";
 import {
   createHost,

@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { createUserMessage } from "@deepseek-ai/dsh-llm";
 import { SessionId } from "@deepseek-ai/dsh-session";
 import { defaultConfig } from "./fixtures/config.ts";
-import { KongmingRuntime } from "../lib/src/session.js";
+import { KongmingRuntime } from "../lib/src/session/runtime.js";
 import { createHost, getAgent, type Host } from "./fixtures/host.ts";
 import { textResponse, messageText } from "./fixtures/mock-adapter.ts";
 

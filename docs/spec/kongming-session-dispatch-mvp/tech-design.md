@@ -19,7 +19,7 @@
 
 | 能力 | 现有实现 | 本次接入方式 |
 |---|---|---|
-| 创建与恢复普通会话 | DSH `packages/api/session-controller/src`：`create`、`resolveAgent`；孔明 `src/session.ts` 已使用 | 同一宿主创建普通 Session；复用 workspaceRegistry 的目录与会话关联 |
+| 创建与恢复普通会话 | DSH `packages/api/session-controller/src`：`create`、`resolveAgent`；孔明 `src/session/runtime.ts` 已使用 | 同一宿主创建普通 Session；复用 workspaceRegistry 的目录与会话关联 |
 | 已有模型列表 | SessionController `modelCatalog()` | 返回原目录的 provider/model ID；执行前校验准确匹配 |
 | 单会话模型选择 | Agent `model.select()`；SessionController `selectModel()` 还会保存全局默认模型 | 选用 Agent 公共方法，并通过 LLM 服务校验路由，限定在新会话 |
 | 排队与唤醒 | Agent `followup(createUserMessage(...))` | 统一 send 内部路径；交给 DSH 消费队列、执行 AgentLoop |
@@ -36,7 +36,7 @@
 
 - `src/dispatch/tools.ts` 注册工具并管理挂载，`content.ts` 校验正文与附件归属，`submit.ts` 校验模型和目录并准备目标会话，`relay.ts` 负责入队、回传与监听清理。
 - `src/dispatch/protocol.ts` 定义消息来源和委派前缀，由宿主和浏览器共同引用。
-- `src/session.ts` / `src/index.ts`：在孔明 Agent 已就绪时挂载工具，随其作用域释放；完成宿主依赖声明。
+- `src/session/runtime.ts` / `src/index.ts`：在孔明 Agent 已就绪时挂载工具，随其作用域释放；完成宿主依赖声明。
 - `src/dispatch/client/projection.ts` 将原生事件转为聊天节点，`view.tsx` 注册折叠视图并复用原生正文组件。文案由 `src/client/locales.ts` 提供。
 - `test/dispatch*.test.ts` 与 `test/fixtures/dispatch/`：真实路径取证后的定向回归。
 

@@ -12,8 +12,8 @@
     "src/client/**/*.tsx",
     "src/dispatch/client/**/*",
     "src/dispatch/protocol.ts",
-    "src/config.ts",
-    "src/protocol/**/*.ts"
+    "src/session/client/**/*",
+    "src/session/protocol.ts"
   ],
   "exclude": []
 }

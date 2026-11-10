@@ -4,7 +4,7 @@ import type { SingleSession } from "./fixtures/single-session.ts";
 import { requestAt } from "./fixtures/mock-adapter.ts";
 import test from "node:test";
 import { defineContentToolFixture } from "@deepseek-ai/dsh-tool-testkit";
-import { KongmingRuntime } from "../lib/src/session.js";
+import { KongmingRuntime } from "../lib/src/session/runtime.js";
 import { defaultConfig } from "./fixtures/config.ts";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";

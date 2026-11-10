@@ -9,8 +9,8 @@ import { loadOverlayPatches } from "@deepseek-ai/dsh-app-boot";
 import { createUserMessage } from "@deepseek-ai/dsh-llm";
 import { SessionId } from "@deepseek-ai/dsh-session";
 import { Config } from "../lib/src/config.js";
-import { mountPrompt } from "../lib/src/prompt.js";
-import { KongmingRuntime } from "../lib/src/session.js";
+import { mountPrompt } from "../lib/src/session/prompt.js";
+import { KongmingRuntime } from "../lib/src/session/runtime.js";
 import { createHost, getAgent } from "./fixtures/host.ts";
 import {
   messageText,

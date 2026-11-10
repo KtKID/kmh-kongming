@@ -1,12 +1,12 @@
 /** 每个用例拥有一个 Loader 子进程，按就绪行同步并等待真实退出。 */
-import type { EnsureResult } from "../../lib/src/protocol/index.js";
+import type { EnsureResult } from "../../lib/src/session/protocol.js";
 import type { InspectState } from "./wire.ts";
 import { ReadySchema, RpcSchema, FailureSchema, apiSchemas } from "./wire.ts";
 import type { SessionController } from "@deepseek-ai/dsh-api-session-controller";
 import {
   ControlResultSchema,
   type ControlRequest,
-} from "../../lib/src/protocol/index.js";
+} from "../../lib/src/session/protocol.js";
 
 type RpcRequestMap = {
   [K in "prompt" | "cancel" | "updateQueue" as `session/${K}`]: {

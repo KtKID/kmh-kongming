@@ -2,15 +2,31 @@
 import { randomUUID } from "node:crypto";
 import { link, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { BindingSchema, type Binding } from "./protocol/index.ts";
+import { z } from "zod";
+
+/** 已预留或已完成创建的固定会话绑定。 */
+const BindingSchema = z
+  .object({
+    version: z.literal(1),
+    phase: z.enum(["reserved", "ready"]),
+    sessionId: z.string().uuid(),
+    cwd: z.string().min(1),
+    agentPreset: z.string().min(1).optional(),
+  })
+  .strict();
+/** 持久化身份值。 */
+export type Binding = z.infer<typeof BindingSchema>;
+
 /** @param error - I/O 异常。 @param code - 预期系统错误码。 @returns 错误码是否匹配。 */
-export function hasErrorCode(error: unknown, code: string): boolean {
+function hasErrorCode(error: unknown, code: string): boolean {
   return error instanceof Error && "code" in error && error.code === code;
 }
 /** 一个 home 的身份文件所有者。 */
 export class BindingStore {
   readonly directory: string;
   readonly filename: string;
+
+  /** 根据当前 home 确定固定身份文件的位置。 */
   constructor(home: string) {
     this.directory = join(home, ".kongming");
     this.filename = join(this.directory, "state.json");
@@ -68,6 +84,8 @@ export class BindingStore {
       await rm(temporary, { force: true });
     }
   }
+
+  /** 读取并校验身份文件，校验失败时报告可用于修复的文件路径。 */
   private async read(): Promise<Binding> {
     const text = await readFile(this.filename, "utf8");
     try {

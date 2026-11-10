@@ -1,17 +1,5 @@
-/** 身份文件和连接消息共用的边界校验定义。 */
+/** 固定会话准备和控制接口的请求与响应校验。 */
 import { z } from "zod";
-/** 已预留或已完成创建的固定会话绑定。 */
-export const BindingSchema = z
-  .object({
-    version: z.literal(1),
-    phase: z.enum(["reserved", "ready"]),
-    sessionId: z.string().uuid(),
-    cwd: z.string().min(1),
-    agentPreset: z.string().min(1).optional(),
-  })
-  .strict();
-/** 持久化身份值。 */
-export type Binding = z.infer<typeof BindingSchema>;
 /** 准备入口由服务端决定身份与目录。 */
 export const EnsureRequestSchema = z.object({}).strict();
 /** 固定会话已准备完成。 */
@@ -29,6 +17,7 @@ export const PromptControlSchema = z
     action: z.literal("prompt"),
     text: z
       .string()
+      // 校验去掉空白后的长度，接纳后沿用用户原文。
       .refine((value) => value.trim().length > 0, "输入内容不能为空"),
     mode: z.enum(["queue", "steer"]).default("queue"),
     requestId: z.string().min(1),

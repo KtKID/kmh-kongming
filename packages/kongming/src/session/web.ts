@@ -1,7 +1,7 @@
-/** 固定会话准备入口，使用宿主现有的鉴权连接。 */
+/** 固定会话的准备和控制接口，使用宿主现有的鉴权连接。 */
 import type { Context } from "@deepseek-ai/cordis";
 import type {} from "@deepseek-ai/dsh-client-connection";
-import type { KongmingRuntime } from "./session.ts";
+import type { KongmingRuntime } from "./runtime.ts";
 import {
   EnsureRequestSchema,
   EnsureResultSchema,
@@ -9,13 +9,14 @@ import {
   ControlRequestSchema,
   ControlResultSchema,
   ControlFailureSchema,
-} from "./protocol/index.ts";
-/** @param ctx - 已提供连接服务的插件上下文。 @param runtime - 当前实例的固定会话运行时。 */
+} from "./protocol.ts";
+/** 注册固定会话的 HTTP 路由，并将校验和执行错误转成可读响应。 */
 export function mountWeb(ctx: Context, runtime: KongmingRuntime): void {
   ctx.connection.fetch.register({
     path: "/api/kmh-kongming/control",
     methods: ["POST"],
     requestBody: "buffered",
+    /** 校验请求并准备固定会话，再将操作交给其控制器。 */
     fetch: async (request) => {
       const headers = { "Cache-Control": "no-store" };
       try {
@@ -60,6 +61,7 @@ export function mountWeb(ctx: Context, runtime: KongmingRuntime): void {
     path: "/api/kmh-kongming/ensure",
     methods: ["POST"],
     requestBody: "buffered",
+    /** 准备固定会话并返回身份与工作目录，供原生导航打开。 */
     fetch: async (request) => {
       const headers = { "Cache-Control": "no-store" };
       try {

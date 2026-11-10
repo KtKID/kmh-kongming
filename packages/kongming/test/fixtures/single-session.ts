@@ -14,7 +14,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { SessionId } from "@deepseek-ai/dsh-session";
 import { defaultConfig } from "./config.ts";
-import { KongmingRuntime } from "../../lib/src/session.js";
+import { KongmingRuntime } from "../../lib/src/session/runtime.js";
 import { createHost, getAgent, type HostPaths } from "./host.ts";
 import { messageText, type ScriptEntry } from "./mock-adapter.ts";
 

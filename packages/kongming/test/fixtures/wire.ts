@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   EnsureResultSchema,
   ControlResultSchema,
-} from "../../lib/src/protocol/index.js";
+} from "../../lib/src/session/protocol.js";
 export const ReadySchema = z.object({
   url: z.url(),
   pid: z.number().int().positive(),

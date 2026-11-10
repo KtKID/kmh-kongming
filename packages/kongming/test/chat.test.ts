@@ -2,7 +2,7 @@
 import type { Agent } from "@deepseek-ai/dsh-agent";
 import { brandString } from "@deepseek-ai/dsh-brand";
 import type { SessionRequestId } from "@deepseek-ai/dsh-api-session-controller";
-import type { EnsureResult } from "../lib/src/protocol/index.js";
+import type { EnsureResult } from "../lib/src/session/protocol.js";
 import type { ScriptEntry } from "./fixtures/mock-adapter.ts";
 import { requestAt } from "./fixtures/mock-adapter.ts";
 import test from "node:test";
@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { SessionId } from "@deepseek-ai/dsh-session";
 import { defaultConfig } from "./fixtures/config.ts";
-import { KongmingRuntime } from "../lib/src/session.js";
+import { KongmingRuntime } from "../lib/src/session/runtime.js";
 import { createHost, getAgent, type Host } from "./fixtures/host.ts";
 import { textResponse, messageText } from "./fixtures/mock-adapter.ts";
 type ChatHost = Host & {

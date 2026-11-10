@@ -4,19 +4,21 @@ import type { Agent } from "@deepseek-ai/dsh-agent";
 import { createUserMessage } from "@deepseek-ai/dsh-llm";
 import { brandString } from "@deepseek-ai/dsh-brand";
 import type { SessionPromptRequest } from "@deepseek-ai/dsh-api-session-controller";
-import { PromptControlSchema } from "./protocol/index.ts";
+import { PromptControlSchema } from "./protocol.ts";
 
 /** 每个已绑定 Agent 拥有一份暂停意图；只控制该孔明实例的输入。 */
 export class KongmingControl {
   private paused = false;
   private closed = false;
 
+  /** 从最近一轮的记录恢复用户主动停止后的暂停状态。 */
   constructor(
     private readonly ctx: Context,
     readonly agent: Agent,
   ) {
     const end = agent.session
       .snapshotEvents()
+      // 只查看执行轮次的开始与结束事件。
       .findLast((e) => e.type === "turn/start" || e.type === "turn/end");
     this.paused =
       end?.type === "turn/end" &&
@@ -24,6 +26,7 @@ export class KongmingControl {
       end.data.reason.reason?.kind === "user";
   }
 
+  /** 确认控制器仍绑定到宿主当前持有的同一 Agent。 */
   private assertActive(): void {
     if (this.closed || this.ctx.agents.get(this.agent.id) !== this.agent)
       throw Error("孔明会话控制器已释放");
@@ -60,19 +63,19 @@ export class KongmingControl {
         },
         signal,
       );
-    const recorded = this.agent.session
-      .snapshotEvents()
-      .some(
-        (e) =>
-          e.type === "user/message" &&
-          e.data.source.kind === "user" &&
-          "rpcId" in e.data.source &&
-          e.data.source.rpcId === id,
-      );
+    const recorded = this.agent.session.snapshotEvents().some(
+      // 已写入历史的同一请求 ID 直接复用接纳回执。
+      (e) =>
+        e.type === "user/message" &&
+        e.data.source.kind === "user" &&
+        "rpcId" in e.data.source &&
+        e.data.source.rpcId === id,
+    );
     const pending = [
       ...this.agent.inbox.nextTurn,
       ...this.agent.inbox.nextStep,
     ].some(
+      // 两个队列中尚未执行的同一请求 ID 也计入去重。
       (m) =>
         m.source.kind === "user" &&
         "rpcId" in m.source &&

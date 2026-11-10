@@ -3,8 +3,8 @@ import type { Context } from "@deepseek-ai/cordis";
 import type {} from "@kmh/kongming/events";
 import type { Config } from "./config.ts";
 import { runtimePaths } from "./paths.ts";
-import { KongmingRuntime } from "./session.ts";
-import { mountWeb } from "./web.ts";
+import { KongmingRuntime } from "./session/runtime.ts";
+import { mountWeb } from "./session/web.ts";
 export { Config } from "./config.ts";
 /** 插件诊断名称。 */
 export const name = "kmh-kongming";
@@ -25,7 +25,7 @@ declare module "@deepseek-ai/cordis" {
     kongming: KongmingRuntime;
   }
 }
-/** @param ctx - 插件生命周期上下文。 @param config - 已校验的默认提示词配置。 */
+/** 创建固定会话运行时，尝试恢复已有身份，再发布服务与 HTTP 接口。 */
 export async function apply(ctx: Context, config: Config): Promise<void> {
   const runtime = new KongmingRuntime(ctx, config, runtimePaths());
   try {
