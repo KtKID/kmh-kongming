@@ -140,19 +140,35 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
         if (agent === target && claimed.id === message.id) claimedTurn = turn;
       },
     );
+    const offDiscard = ctx.on(
+      "agent/inbox/discarded",
+      ({ agent, message: discarded }) => {
+        if (agent !== target || discarded.id !== message.id) return;
+        // 编辑与转入当前轮会保留消息 ID，等队列操作完成后再判断是否取消。
+        queueMicrotask(() => {
+          if (
+            !pending.has(release) ||
+            claimedTurn !== undefined ||
+            target.inbox.nextTurn.some((queued) => queued.id === message.id) ||
+            target.inbox.nextStep.some((queued) => queued.id === message.id)
+          )
+            return;
+          deliver("委派已在开始执行前取消。");
+        });
+      },
+    );
     const offEvent = ctx.on("session/event", (session, event) => {
       if (session !== target.session || claimedTurn === undefined) return;
       if (
         event.type === "assistant/message" &&
         event.data.turn === claimedTurn
       ) {
-        const visible = event.data.message.content.filter(
+        answer = event.data.message.content.filter(
           (block) =>
             block.type === "image" ||
             block.type === "file" ||
             (block.type === "text" && block.text.trim() !== ""),
         );
-        if (visible.length > 0) answer = visible;
       }
       if (event.type !== "turn/end" || event.data.turn !== claimedTurn) return;
       const reason = event.data.reason;
@@ -169,6 +185,7 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
     function release(): void {
       pending.delete(release);
       offClaim();
+      offDiscard();
       offEvent();
       offDispose();
     }
