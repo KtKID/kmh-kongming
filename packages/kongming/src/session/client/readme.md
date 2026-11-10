@@ -1,0 +1,34 @@
+# session/client/ 固定会话浏览器侧
+
+> 草稿，待用户检查。模块总览、设计理念与使用方式见 [../../readme.md](../../readme.md)，宿主侧见 [../readme.md](../readme.md)。
+
+这一目录负责"点击侧栏入口之后、原生会话页打开之前"的浏览器行为：两个文件把侧栏按钮和准备面板接到同一个固定会话——[entry.ts](entry.ts) 注册入口并发起准备请求，[KongmingPanel.tsx](KongmingPanel.tsx) 展示准备状态。准备成功后聊天页交给 DSH 原生导航，浏览器侧没有聊天实现。
+
+### [entry.ts](entry.ts) — 侧栏入口与准备
+
+**功能**：`mountSessionEntry(ctx)` 注册侧栏按钮和主面板，把两者接到同一个固定会话。
+
+**实现原理**：`prepare()` 发 `POST /api/kmh-kongming/ensure`——失败时按 `FailureSchema`（[../protocol.ts](../protocol.ts)）解析出可读原因抛出；成功时解析 `{sessionId, cwd}`，刷新会话列表，然后用原生工作区导航打开该会话。侧栏 `sidebar.panellist` 槽位注册图标按钮（顺序 5），主面板 `main` 槽位注册 `KongmingPanel` 并把 `prepare` 注入给它，两个槽位用同一个面板 ID `kmh-kongming`。
+
+**设计取舍**：浏览器不自己建会话，只请求宿主准备再交给原生导航——聊天页完全由 DSH 挂载，插件在浏览器侧没有聊天实现（对应[包 README](../../../README.md)"实现说明"）。
+
+#### 关键函数
+
+| 函数及源码链接 | 负责什么 | 主要输入和结果 | 关键处理或限制 |
+| --- | --- | --- | --- |
+| [`mountSessionEntry`](entry.ts#L22) | 注册入口 | 收到浏览器上下文，无返回 | 面板与按钮共用同一 ID，原生导航按它接管 |
+| [`prepare`](entry.ts#L25) | 请求准备并导航 | 取消信号；成功打开会话页 | 响应体始终按 schema 解析，解析失败也算准备失败 |
+
+### [KongmingPanel.tsx](KongmingPanel.tsx) — 准备面板
+
+**功能**：`KongmingPanel` React 组件，占用主面板位置，只有加载和失败两个状态。
+
+**实现原理**：`useEffect` 里每次 `attempt` 变化就新建一个 `AbortController` 发起 `prepare`；离开面板或重新发起时 abort 旧请求，只有仍在等待的面板才展示本次失败。失败态显示"孔明暂时无法打开"+ 具体原因 + 「重试」按钮，点重试让 `attempt` 加一触发新一轮。
+
+**设计取舍**：取消信号贯穿面板生命周期，用户切走面板时不会留下迟到错误弹回界面；重试就是重新执行同一 `prepare`，无额外状态机。
+
+#### 关键函数
+
+| 函数及源码链接 | 负责什么 | 主要输入和结果 | 关键处理或限制 |
+| --- | --- | --- | --- |
+| [`KongmingPanel`](KongmingPanel.tsx#L22) | 准备状态面板组件 | 注入的 `prepare` 与词典；渲染加载或失败态 | 面板退出或重试时 abort 进行中的请求，迟到的失败不展示 |
