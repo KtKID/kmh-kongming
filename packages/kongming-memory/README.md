@@ -125,7 +125,7 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 | [test/prompt-config.test.ts](test/prompt-config.test.ts)                                                                     | P05–P06：完整模板、字面量保持与无效配置拒绝。                                                                                      |
 | [test/turn-reminder.test.ts](test/turn-reminder.test.ts)                                                                     | R01–R06：同轮真实文件工具、去重、输出上限、错误取消、重新绑定与配置空值。                                                          |
 | [孔明可选记忆测试](../kmh-kongming/test/optional-memory.test.ts)                                                             | O01–O05：基础孔明独立运行，记忆在执行或组装等待期间卸载，后装/重装及准备失败后的移除。默认 mock 路由覆盖开头系统提示词的替换模式。 |
-| [冻结骨架](test/frozen-memory.test.ts)、[边界骨架](test/frozen-memory-boundaries.test.ts)、[提醒骨架](test/reminder.test.ts) | 保留 48 个设计编号；各变体的实施状态由测试设计维护。              |
+| [冻结骨架](test/frozen-memory.test.ts)、[边界骨架](test/frozen-memory-boundaries.test.ts)、[提醒骨架](test/reminder.test.ts) | 保留 48 个设计编号；各变体的实施状态由测试设计维护。                                                                               |
 
 `in-history` 路由需要额外核对整个请求中的多个系统消息。普通 mock 路由的卸载断言与该路径分别取证，完整请求中的正文残留和最新系统提示词的内容分别判定。
 
