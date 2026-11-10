@@ -9,7 +9,7 @@ import type { Config } from "./config.ts";
 import { validateProjectDir, type RuntimePaths } from "./paths.ts";
 import { BindingStore } from "./state.ts";
 import { mountPrompt } from "./prompt.ts";
-import { mountDispatch } from "./dispatch.ts";
+import { mountDispatch } from "./dispatch/tools.ts";
 import { KongmingControl } from "./control.ts";
 import type { Binding, EnsureResult } from "./protocol/index.ts";
 export type { RuntimePaths } from "./paths.ts";

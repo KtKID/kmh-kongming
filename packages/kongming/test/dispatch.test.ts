@@ -8,7 +8,7 @@ import type {
   SessionUpdateQueueValue,
 } from "@deepseek-ai/dsh-api-session-controller";
 import type { GenerateOptions, StreamChunk } from "@deepseek-ai/dsh-llm";
-import { ReplySourceSchema } from "../src/protocol/dispatch.ts";
+import { ReplySourceSchema } from "../src/dispatch/protocol.ts";
 import {
   messageText,
   textResponse,

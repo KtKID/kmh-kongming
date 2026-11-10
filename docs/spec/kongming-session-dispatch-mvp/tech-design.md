@@ -34,10 +34,10 @@
 
 ## 模块与数据归属
 
-- `src/dispatch.ts`：挂载孔明工具、校验目录与模型、创建和派发、当前进程中一次回传的跟踪与释放。
-- `src/protocol/dispatch.ts`：唯一的来源字段定义及共享解析，宿主和浏览器共同引用；内容类型引用 DSH。
+- `src/dispatch/tools.ts` 注册工具并管理挂载，`content.ts` 校验正文与附件归属，`submit.ts` 校验模型和目录并准备目标会话，`relay.ts` 负责入队、回传与监听清理。
+- `src/dispatch/protocol.ts` 定义消息来源和委派前缀，由宿主和浏览器共同引用。
 - `src/session.ts` / `src/index.ts`：在孔明 Agent 已就绪时挂载工具，随其作用域释放；完成宿主依赖声明。
-- `src/client/dispatch.tsx`：原生事件生成折叠节点，原生组件展示正文；文案加入现有 `src/client/locales.ts`。
+- `src/dispatch/client/projection.ts` 将原生事件转为聊天节点，`view.tsx` 注册折叠视图并复用原生正文组件。文案由 `src/client/locales.ts` 提供。
 - `test/dispatch*.test.ts` 与 `test/fixtures/dispatch/`：真实路径取证后的定向回归。
 
 Session、消息、模型选择、cwd、队列、工具执行、附件及事件日志均由 DSH 持有。孔明持有当前进程里“此次派发待回传”的小型关联表，字段仅为源 Session、目标 Session、派发 ID、实际 turn、终态发送标志。会话日志中的来源支持刷新后的界面重建。首次 MVP 的进程重启结束本轮内存监听；重启补收独立排期。
@@ -61,7 +61,7 @@ Session、消息、模型选择、cwd、队列、工具执行、附件及事件�
 
 执行前依据 DSH 原生内容校验与 admission 处理；文件收据属于其上传会话，跨会话复用必须先通过已有附件接口得到合法持久引用。实现若遇到当前公共接口的内容类型边界，显式返回该类型的失败原因并记录限制，保留原文与附件；第一版天气 smoke 的验收范围限定文本。工具执行返回 `{dispatchId, sessionId, provider, model, status: "queued"}`，仅表示排队成功。不可用模型返回明确工具错误，创建前完成目录校验；排队后执行失败则通过回传报告实际错误。
 
-### 消息来源（唯一声明在 src/protocol/dispatch.ts）
+### 消息来源（唯一声明在 src/dispatch/protocol.ts）
 
 | 字段 | 类型 / 规则 | 用途 |
 |---|---|---|

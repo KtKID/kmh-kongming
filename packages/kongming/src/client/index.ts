@@ -9,9 +9,9 @@ import type {} from "@deepseek-ai/dsh-client-ui-sidebar/client";
 import type {} from "@deepseek-ai/dsh-client-locale/client";
 import { IconSparkleRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { PropsRuntime } from "@deepseek-ai/dsh-client-ui-slots";
+import { mountDispatchView } from "../dispatch/client/view.tsx";
 import { EnsureResultSchema, FailureSchema } from "../protocol/index.ts";
 import { KongmingPanel } from "./KongmingPanel.tsx";
-import { mountDispatchView } from "./dispatch.tsx";
 import { zh, en, type KongmingLocaleKey } from "./locales.ts";
 /** 浏览器半的公开服务依赖。 */
 export const inject = [

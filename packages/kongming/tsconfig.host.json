@@ -26,5 +26,5 @@
     "noEmitOnError": true
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["src/client"]
+  "exclude": ["src/client", "src/dispatch/client"]
 }

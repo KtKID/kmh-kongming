@@ -26,7 +26,7 @@ declare module "@deepseek-ai/dsh-llm" {
   }
 }
 
-/** 模型收到的独立来源说明，浏览器依据同一文案识别该块。 */
+/** 生成委派来源前缀，供目标模型识别来源和浏览器定位前缀文本块。 */
 export function dispatchPreface(senderSessionId: string): string {
   return `来自孔明会话 ${senderSessionId} 的委派。`;
 }
