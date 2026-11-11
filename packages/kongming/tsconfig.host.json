@@ -21,6 +21,29 @@
     "types": ["node"],
     "lib": ["ES2023"],
     "rewriteRelativeImportExtensions": true,
+    "paths": {
+      "@deepseek-ai/cordis": [
+        "./node_modules/@deepseek-ai/cordis/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-agent": [
+        "./node_modules/@deepseek-ai/dsh-agent/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-llm": [
+        "./node_modules/@deepseek-ai/dsh-llm/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-session": [
+        "./node_modules/@deepseek-ai/dsh-session/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-session/types": [
+        "./node_modules/@deepseek-ai/dsh-session/lib/types/types.d.ts"
+      ],
+      "@deepseek-ai/dsh-api-session-controller": [
+        "./node_modules/@deepseek-ai/dsh-api-session-controller/lib/types/index.d.ts"
+      ],
+      "@deepseek-ai/dsh-workspace": [
+        "./node_modules/@deepseek-ai/dsh-workspace/lib/types/index.d.ts"
+      ]
+    },
     "composite": true,
     "tsBuildInfoFile": "lib/host.tsbuildinfo",
     "noEmitOnError": true

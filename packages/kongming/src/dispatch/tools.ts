@@ -3,7 +3,8 @@ import type { Context } from "@deepseek-ai/cordis";
 import type { Agent } from "@deepseek-ai/dsh-agent";
 import type {} from "@deepseek-ai/dsh-api-session-controller";
 import { defineTool } from "@deepseek-ai/dsh-tools";
-import { createDispatchRelay } from "./relay.ts";
+import { sendAndWatch } from "@kmh/session-kit";
+import { dispatchPreface } from "./protocol.ts";
 import { prepareDispatch } from "./submit.ts";
 
 const outputSchema = {
@@ -23,7 +24,8 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
   let active = true;
   /** 确认挂载仍有效，且宿主仍持有同一个源 Agent 实例。 */
   const isSourceActive = () => active && ctx.agents.get(source.id) === source;
-  const relay = createDispatchRelay(ctx, source, isSourceActive);
+  // 每次委派的轮次跟踪释放入口；挂载卸载时统一释放。
+  const releases = new Set<() => void>();
 
   /** 检查请求是否取消，并限制工具只能由当前孔明 Agent 调用。 */
   function requireSource(agent: Agent | undefined, signal: AbortSignal): void {
@@ -106,7 +108,7 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
       },
       /** 准备目标会话并发送任务，入队成功后返回委派与会话 ID。 */
       async execute({ provider, model, content, cwd }, { agent, signal }) {
-        const { sessionId, target, admitted } = await prepareDispatch(
+        const { sessionId, admitted } = await prepareDispatch(
           ctx,
           source,
           { provider, model, content, cwd },
@@ -115,7 +117,14 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
           () => requireSource(agent, signal),
         );
         requireSource(agent, signal);
-        const dispatchId = relay.enqueue(target, admitted);
+        const { dispatchId, release } = await sendAndWatch(ctx, {
+          from: source,
+          toSessionId: sessionId,
+          content: admitted,
+          preface: dispatchPreface(source.id),
+          isSourceActive,
+        });
+        releases.add(release);
         return {
           dispatchId,
           sessionId,
@@ -126,11 +135,12 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
       },
     }),
   );
-  // 先标记挂载失效，再注销工具并清理尚待回传的监听。
+  // 先标记挂载失效，再注销工具并清理尚待回传的跟踪。
   return () => {
     active = false;
     offDispatch();
     offList();
-    relay.dispose();
+    for (const release of releases) release();
+    releases.clear();
   };
 }

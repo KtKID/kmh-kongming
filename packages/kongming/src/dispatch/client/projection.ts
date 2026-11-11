@@ -1,7 +1,7 @@
 /** 把孔明委派的原生会话事件投影为聊天节点。 */
 import type { ChatNode } from "@deepseek-ai/dsh-client-ui-chat/client";
 import type { ConversationNodeDefinition } from "@deepseek-ai/dsh-client-ui-conversation/client";
-import { DispatchSourceSchema, dispatchPreface } from "../protocol.ts";
+import { AnyRelaySourceSchema, dispatchPreface } from "../protocol.ts";
 
 interface DispatchInput {
   readonly dispatchId: string;
@@ -21,7 +21,7 @@ export const dispatchInput: ConversationNodeDefinition<DispatchInput> = {
   match(event) {
     if (event.type !== "user/message" || event.surfaceOp !== "append")
       return null;
-    return DispatchSourceSchema.safeParse(event.data.source).success
+    return AnyRelaySourceSchema.safeParse(event.data.source).success
       ? { id: event.data.id, role: "start", exclusive: true }
       : null;
   },
@@ -30,7 +30,7 @@ export const dispatchInput: ConversationNodeDefinition<DispatchInput> = {
     if (event.type !== "user/message")
       throw Error("Expected a Kongming dispatch message");
     const { id, source, content } = event.data;
-    const dispatch = DispatchSourceSchema.parse(source);
+    const dispatch = AnyRelaySourceSchema.parse(source);
     const first = content[0];
     return {
       dispatchId: dispatch.dispatchId,

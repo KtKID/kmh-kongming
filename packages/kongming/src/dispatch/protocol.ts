@@ -1,4 +1,4 @@
-/** 原生会话日志中由孔明签发的跨会话消息来源。 */
+/** 原生会话日志中由孔明签发的跨会话消息来源（现行 kind 为底座的 kmh-relay）。 */
 import { z } from "zod";
 import type {} from "@deepseek-ai/dsh-llm";
 
@@ -9,20 +9,21 @@ const sourceFields = {
   targetSessionId: z.string().min(1),
 };
 
+/** 历史标记：迁移到 @kmh/session-kit 前的委派消息来源，仅供读取旧日志。 */
 export const DispatchSourceSchema = z.object({
   ...sourceFields,
   kind: z.literal("kongming-dispatch"),
 });
 
-export const ReplySourceSchema = z.object({
+/** 兼容历史 kongming-dispatch 与现行 kmh-relay 两种标记的宽松解析（投影用）。 */
+export const AnyRelaySourceSchema = z.object({
   ...sourceFields,
-  kind: z.literal("kongming-reply"),
+  kind: z.enum(["kongming-dispatch", "kmh-relay"]),
 });
 
 declare module "@deepseek-ai/dsh-llm" {
   interface MessageSourceMap {
     "kongming-dispatch": z.infer<typeof DispatchSourceSchema>;
-    "kongming-reply": z.infer<typeof ReplySourceSchema>;
   }
 }
 

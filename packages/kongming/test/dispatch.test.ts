@@ -8,7 +8,7 @@ import type {
   SessionUpdateQueueValue,
 } from "@deepseek-ai/dsh-api-session-controller";
 import type { GenerateOptions, StreamChunk } from "@deepseek-ai/dsh-llm";
-import { ReplySourceSchema } from "../src/dispatch/protocol.ts";
+import { RelaySourceSchema } from "@kmh/session-kit";
 import {
   messageText,
   textResponse,
@@ -28,7 +28,7 @@ const dispatch = toolCallResponse("kongming_dispatch", {
 function isTargetRequest(request: GenerateOptions): boolean {
   return request.messages.some(
     (message) =>
-      message.role === "user" && message.source?.kind === "kongming-dispatch",
+      message.role === "user" && message.source?.kind === "kmh-relay",
   );
 }
 
@@ -48,12 +48,12 @@ async function observeReply(host: SingleSession) {
     .filter(
       (event) =>
         event.type === "user/message" &&
-        event.data.source.kind === "kongming-reply",
+        event.data.source.kind === "kmh-relay",
     );
   assert.equal(replies.length, 1, "本次委派应回传一次");
   const reply = replies[0];
   assert.ok(reply?.type === "user/message");
-  const source = ReplySourceSchema.parse(reply.data.source);
+  const source = RelaySourceSchema.parse(reply.data.source);
   assert.equal(source.senderSessionId, target.id);
   assert.equal(source.targetSessionId, target.id);
   assert.ok(messageText(receipt.data.message).includes(source.dispatchId));
@@ -115,7 +115,7 @@ for (const { name, action } of queueCases) {
       const off = host.ctx.on("agent/status", ({ agent, status }) => {
         if (status !== "running" || changed !== undefined) return;
         const queued = agent.inbox.nextTurn.find(
-          (message) => message.source.kind === "kongming-dispatch",
+          (message) => message.source.kind === "kmh-relay",
         );
         if (queued === undefined) return;
         changed = host.ctx.sessionController.updateQueue({
@@ -135,11 +135,11 @@ for (const { name, action } of queueCases) {
           .find(
             (event) =>
               event.type === "user/message" &&
-              event.data.source.kind === "kongming-dispatch",
+              event.data.source.kind === "kmh-relay",
           );
         if (action.kind === "remove") {
           assert.equal(admitted, undefined);
-          assert.match(text, /委派已在开始执行前取消。$/);
+          assert.match(text, /消息已在开始执行前取消。$/);
         } else {
           assert.ok(admitted?.type === "user/message");
           assert.match(text, /目标执行结果$/);
