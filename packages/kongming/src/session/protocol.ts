@@ -11,6 +11,11 @@ export const EnsureResultSchema = z
   .strict();
 /** 准备入口响应值。 */
 export type EnsureResult = z.infer<typeof EnsureResultSchema>;
+/** 只读的固定会话身份，首次使用前为 null。 */
+export const FixedSessionSchema = z
+  .object({ sessionId: EnsureResultSchema.shape.sessionId.nullable() })
+  .strict();
+export type FixedSession = z.infer<typeof FixedSessionSchema>;
 /** 孔明控制入口只接纳文本，并由宿主确定固定会话身份。 */
 export const PromptControlSchema = z
   .object({

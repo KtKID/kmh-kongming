@@ -28,6 +28,10 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 启动前将 `KMH_KONGMING_PROJECT_DIR` 设置为实际项目目录的绝对路径。该目录需要存在且可读、可遍历；文件写入遵循当前工具与审批规则。点击「孔明」后，插件准备身份、注册工作区，再通过 DSH 原生导航打开完整会话页。头部、上下文、文件、终端、模型选择和审批由当前 Web 插件组合提供。
 
+### 侧栏专属入口
+
+点击侧栏「孔明」直接打开原固定聊天。插件启用期间，普通侧栏的工作区分组和平铺列表隐藏这条会话，包括刷新后已存在的会话。原聊天历史、会话 ID 和工作目录继续沿用，其他会话照常显示。侧栏搜索使用宿主自身的结果规则。
+
 本包拥有两项提示词配置，部署文案集中保存在安装 patch。
 
 | 配置键              | Schema 默认值 | 行为                                       |
@@ -179,3 +183,6 @@ node --test --test-concurrency=1 packages/kongming/test/*.test.ts
 
 明庭任务发布插件已迁移为独立仓库 [kmh-mingting](../kmh-plugin/kmh-mingting/README.md)（submodule 挂载于 `packages/kmh-plugin/kmh-mingting`），配置项、工具行为与启用方式见该包 README。
 
+## 变更记录
+
+- 2026-11-10 · 修改「侧栏专属入口」· 普通会话列表隐藏孔明固定会话 · 已实现并通过隔离验收 · [任务记录](../../docs/task/task-kongming-sidebar-visibility.md)

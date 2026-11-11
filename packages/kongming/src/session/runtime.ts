@@ -69,6 +69,12 @@ export class KongmingRuntime {
     const agent = this.ctx.agents.get(SessionId(binding.sessionId));
     if (agent !== undefined) this.bindAgent(agent);
   }
+
+  /** 返回已绑定的固定会话 ID，读取时无需准备会话。 */
+  get fixedSessionId(): string | null {
+    return this.binding?.sessionId ?? null;
+  }
+
   /** 合并并发准备请求，返回固定会话身份及工作目录。 */
   ensure(): Promise<EnsureResult> {
     if (this.closed) return Promise.reject(Error("孔明插件已停用"));

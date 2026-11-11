@@ -4,12 +4,14 @@ import type { Context } from "@deepseek-ai/cordis";
 import { brandString } from "@deepseek-ai/dsh-brand";
 import type { SessionId } from "@deepseek-ai/dsh-session/types";
 import type { MainPanelId } from "@deepseek-ai/dsh-client-ui-layout/client";
+import type {} from "@deepseek-ai/dsh-client-ui-conversation/client";
 import type {} from "@deepseek-ai/dsh-client-ui-workspace/client";
 import type {} from "@deepseek-ai/dsh-client-ui-sidebar/client";
 import { IconSparkleRegular } from "@deepseek-ai/dsh-client-ui-primitives";
 import type { PropsRuntime } from "@deepseek-ai/dsh-client-ui-slots";
 import { EnsureResultSchema, FailureSchema } from "../protocol.ts";
 import { KongmingPanel } from "./KongmingPanel.tsx";
+import { mountSidebarVisibility } from "./sidebar-visibility.ts";
 
 const PANEL_ID = brandString<MainPanelId>("kmh-kongming");
 
@@ -21,6 +23,7 @@ function KongmingIcon({ size }: PropsRuntime<"sidebar.panellist">) {
 /** 将侧栏按钮和准备面板接到同一固定会话。 */
 export function mountSessionEntry(ctx: Context): void {
   const t = ctx.locale.bind("kongming");
+  const sidebarVisibility = mountSidebarVisibility(ctx);
   /** 请求宿主准备固定会话，刷新列表后用原生导航打开它。 */
   const prepare = async (signal: AbortSignal): Promise<void> => {
     const response = await fetch("/api/kmh-kongming/ensure", {
@@ -31,11 +34,38 @@ export function mountSessionEntry(ctx: Context): void {
     });
     const value: unknown = await response.json();
     if (!response.ok) throw Error(FailureSchema.parse(value).message);
-    const result = EnsureResultSchema.parse(value);
+    const sessionId = brandString<SessionId>(
+      EnsureResultSchema.parse(value).sessionId,
+    );
+    signal.throwIfAborted();
+    sidebarVisibility.hide(sessionId);
     await ctx.sessions.refresh();
     signal.throwIfAborted();
-    ctx.uiWorkspace.openSession(brandString<SessionId>(result.sessionId));
+    ctx.uiWorkspace.openSession(sessionId);
   };
+  /** 让空白页和已有历史都清楚标出当前打开的是孔明。 */
+  function SessionLabel({ isKongming }: { isKongming: boolean }) {
+    return isKongming
+      ? createElement("span", { "data-kongming-session-label": "" }, t("panel"))
+      : null;
+  }
+  for (const slot of [
+    "conversation.hero.options",
+    "conversation.session.header.utilities",
+  ] as const) {
+    ctx.slots.inject(slot, () =>
+      ctx.slots.register(
+        {
+          name: slot,
+          id: PANEL_ID,
+          inject: (sessionId) => ({
+            isKongming: sessionId === sidebarVisibility.sessionId,
+          }),
+        },
+        SessionLabel,
+      ),
+    );
+  }
   ctx.slots.inject(
     "main",
     // 主面板接管打开入口后、固定会话准备完成前的状态。

@@ -2,6 +2,7 @@
 import { z } from "zod";
 import {
   EnsureResultSchema,
+  FixedSessionSchema,
   ControlResultSchema,
 } from "../../lib/src/session/protocol.js";
 export const ReadySchema = z.object({
@@ -54,6 +55,7 @@ export const FailureSchema = z.object({ message: z.string() });
 export const apiSchemas = {
   "/api/kmh-kongming/control": ControlResultSchema,
   "/api/kmh-kongming/ensure": EnsureResultSchema,
+  "/api/kmh-kongming/session-id": FixedSessionSchema,
   "/api/kmh-kongming-test/inspect": InspectSchema,
   "/api/kmh-kongming-test/inspect?wait=idle": InspectSchema,
   "/api/kmh-kongming-test/barrier": z.object({ blocked: z.literal(true) }),

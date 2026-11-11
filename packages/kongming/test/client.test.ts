@@ -29,9 +29,30 @@ await test("T01.1/T01.4: a plugin sidebar entry mounts a native session host and
   const entries: z.infer<typeof EntrySchema>[] = [];
   const cleanups: Cleanup[] = [];
   const sessionId = randomUUID();
+  const ordinarySessionId = randomUUID();
   const opened: string[] = [];
+  const attachedStyles = new Set<unknown>();
+  const style = {
+    textContent: "",
+    remove: () => attachedStyles.delete(style),
+  };
   const sandbox = {
-    fetch: () => Promise.resolve(Response.json({ sessionId, cwd: "/proj" })),
+    AbortController,
+    fetch: (path: string) =>
+      Promise.resolve(
+        Response.json(
+          path === "/api/kmh-kongming/session-id"
+            ? { sessionId }
+            : { sessionId, cwd: "/proj" },
+        ),
+      ),
+    document: {
+      createElement: (tag: string) => {
+        assert.equal(tag, "style");
+        return style;
+      },
+      head: { appendChild: (value: unknown) => attachedStyles.add(value) },
+    },
     window: {
       __ModuleLoader__: {
         load: (item: {
@@ -77,6 +98,13 @@ await test("T01.1/T01.4: a plugin sidebar entry mounts a native session host and
     };
     assert.ok(module);
     module.apply(ctx);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    assert.ok(attachedStyles.has(style), "启动时应挂载侧栏隐藏样式");
+    assert.ok(
+      style.textContent.includes(`data-row-key="session:${sessionId}"`),
+    );
+    assert.ok(!style.textContent.includes(ordinarySessionId));
+    assert.deepEqual(opened, [], "读取已有身份时保持当前页面");
     assert.ok(
       entries.some(
         (e) => e.name === "sidebar.panellist" && e.id === "kmh-kongming",
@@ -100,6 +128,7 @@ await test("T01.1/T01.4: a plugin sidebar entry mounts a native session host and
     );
     for (const cleanup of cleanups.splice(0).reverse()) await cleanup();
     assert.equal(entries.length, 0);
+    assert.equal(attachedStyles.size, 0);
   } finally {
     for (const cleanup of cleanups.reverse()) await cleanup();
   }

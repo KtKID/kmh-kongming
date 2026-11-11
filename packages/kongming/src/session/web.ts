@@ -5,6 +5,7 @@ import type { KongmingRuntime } from "./runtime.ts";
 import {
   EnsureRequestSchema,
   EnsureResultSchema,
+  FixedSessionSchema,
   FailureSchema,
   ControlRequestSchema,
   ControlResultSchema,
@@ -12,6 +13,19 @@ import {
 } from "./protocol.ts";
 /** 注册固定会话的 HTTP 路由，并将校验和执行错误转成可读响应。 */
 export function mountWeb(ctx: Context, runtime: KongmingRuntime): void {
+  ctx.connection.fetch.register({
+    path: "/api/kmh-kongming/session-id",
+    methods: ["GET"],
+    requestBody: "buffered",
+    /** 供侧栏识别已有会话，首次读取时保持按需创建。 */
+    fetch: () =>
+      Promise.resolve(
+        Response.json(
+          FixedSessionSchema.parse({ sessionId: runtime.fixedSessionId }),
+          { headers: { "Cache-Control": "no-store" } },
+        ),
+      ),
+  });
   ctx.connection.fetch.register({
     path: "/api/kmh-kongming/control",
     methods: ["POST"],

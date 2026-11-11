@@ -6,7 +6,7 @@ import type { SessionPromptRequest } from "@deepseek-ai/dsh-api-session-controll
 import { UserSchema, InboxSchema, type InspectState } from "./fixtures/wire.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { access, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { startFixture, type WebFixture } from "./fixtures/process.ts";
@@ -28,7 +28,22 @@ async function withWeb(
   let app: WebFixture | undefined;
   try {
     app = await startFixture(root);
+    const unauthenticated = await fetch(
+      new URL("/api/kmh-kongming/session-id", app.url),
+    );
+    assert.equal(unauthenticated.status, 401);
+    assert.equal(
+      (await app.api("/api/kmh-kongming/session-id")).sessionId,
+      null,
+    );
+    await assert.rejects(access(join(app.home, ".kongming", "state.json")), {
+      code: "ENOENT",
+    });
     const ready = await app.api("/api/kmh-kongming/ensure", {});
+    assert.equal(
+      (await app.api("/api/kmh-kongming/session-id")).sessionId,
+      ready.sessionId,
+    );
     const sessionId = SessionId(ready.sessionId);
     const fixture = app;
     const prompt: Prompt = (
