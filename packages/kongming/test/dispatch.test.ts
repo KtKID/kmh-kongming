@@ -7,8 +7,13 @@ import type {
   SessionUpdateQueueRequest,
   SessionUpdateQueueValue,
 } from "@deepseek-ai/dsh-api-session-controller";
-import type { GenerateOptions, StreamChunk } from "@deepseek-ai/dsh-llm";
+import {
+  createUserMessage,
+  type GenerateOptions,
+  type StreamChunk,
+} from "@deepseek-ai/dsh-llm";
 import { RelaySourceSchema } from "@kmh/session-kit";
+import { dispatchInput } from "../src/dispatch/client/projection.ts";
 import {
   messageText,
   textResponse,
@@ -47,8 +52,7 @@ async function observeReply(host: SingleSession) {
     .events()
     .filter(
       (event) =>
-        event.type === "user/message" &&
-        event.data.source.kind === "kmh-relay",
+        event.type === "user/message" && event.data.source.kind === "kmh-relay",
     );
   assert.equal(replies.length, 1, "本次委派应回传一次");
   const reply = replies[0];
@@ -57,10 +61,110 @@ async function observeReply(host: SingleSession) {
   assert.equal(source.senderSessionId, target.id);
   assert.equal(source.targetSessionId, target.id);
   assert.ok(messageText(receipt.data.message).includes(source.dispatchId));
-  return { target, text: messageText(reply.data) };
+  return { target, reply, text: messageText(reply.data) };
 }
 
 const options = { timeout: 20_000 };
+
+/** 用原生事件驱动同一个浏览器投影，检查分组和实际显示正文。 */
+function projectDispatchEvent(
+  event: Parameters<typeof dispatchInput.start>[1]["event"],
+) {
+  const match = dispatchInput.match(event);
+  assert.ok(match?.exclusive);
+  const start = {
+    event,
+    role: "start",
+    location: { kind: "session" },
+  } as const;
+  const context = {
+    key: match.id,
+    kind: dispatchInput.kind,
+    id: match.id,
+    start,
+    state: undefined,
+    matches: [start],
+    current: new Map(),
+  };
+  const state = dispatchInput.start(context, start, {
+    previous: () => undefined,
+  });
+  const node = dispatchInput.buildViewNode?.({ ...context, state });
+  assert.ok(node && "groupTree" in node);
+  return { node, state };
+}
+
+await test(
+  "T5：同轮收尾提示的输出保留在目标会话，回流原答",
+  options,
+  async () => {
+    const businessAnswer = "杭州晴";
+    const maintenanceAnswer = "记忆已保存";
+    const answer = (request: GenerateOptions) => {
+      if (!isTargetRequest(request)) return textResponse("孔明已记录");
+      return textResponse(
+        request.messages.some(
+          (message) =>
+            message.role === "user" &&
+            message.source?.kind === "kongming-memory-v1:reminder",
+        )
+          ? maintenanceAnswer
+          : businessAnswer,
+      );
+    };
+    await singleSession(
+      [dispatch, answer, answer, answer, answer],
+      async (host) => {
+        const reminded = new Set<number>();
+        const off = host.ctx.on("agent/turn-stopping", ({ agent, turn }) => {
+          if (agent === host.agent || reminded.has(turn)) return;
+          reminded.add(turn);
+          agent.steer(
+            createUserMessage({
+              source: {
+                kind: "kongming-memory-v1:reminder",
+                form: "instructions",
+                sessionId: agent.session.id,
+                turn,
+              },
+              content: [{ type: "text", text: "请保存本轮记忆。" }],
+            }),
+          );
+        });
+        try {
+          await host.prompt("请委派查询");
+          const { target, reply, text } = await observeReply(host);
+          const request = target.session
+            .snapshotEvents()
+            .find(
+              (event) =>
+                event.type === "user/message" &&
+                event.data.source.kind === "kmh-relay",
+            );
+          assert.ok(request);
+          const requestCard = projectDispatchEvent(request);
+          assert.equal(requestCard.state.direction, "request");
+          assert.equal(requestCard.node.groupTree, "exchange");
+          const replyCard = projectDispatchEvent(reply);
+          assert.equal(replyCard.state.direction, "reply");
+          assert.equal(replyCard.node.groupTree, "input");
+          assert.deepEqual(replyCard.state.message.content, [
+            { type: "text", text: businessAnswer },
+          ]);
+          const last = target.session
+            .snapshotEvents()
+            .findLast((event) => event.type === "assistant/message");
+          assert.ok(last);
+          assert.equal(messageText(last.data.message), maintenanceAnswer);
+          assert.ok(text.endsWith(businessAnswer));
+          assert.ok(!text.includes(maintenanceAnswer));
+        } finally {
+          off();
+        }
+      },
+    );
+  },
+);
 
 await test(
   "T1：空正文终态回传状态，省略工具调用前的过程话语",
@@ -82,13 +186,35 @@ await test(
       async (host) => {
         await writeFile(join(host.paths.projectDir, "input.txt"), "测试数据");
         await host.prompt("请委派查询");
-        const { target, text } = await observeReply(host);
+        const { target, reply, text } = await observeReply(host);
         const final = target.session
           .snapshotEvents()
           .findLast((event) => event.type === "assistant/message");
         assert.deepEqual(final?.data.message.content, []);
         assert.match(text, /执行已结束，但没有公开回复正文。$/);
         assert.doesNotMatch(text, /我先查一下/);
+        const source = RelaySourceSchema.parse(reply.data.source);
+        const legacy = {
+          ...reply,
+          data: {
+            ...reply.data,
+            source: { ...source, kind: "kongming-reply" as const },
+            content: [
+              {
+                type: "text" as const,
+                text: `委派 ${source.dispatchId} · 会话 ${target.id} 的执行结果：执行已结束，但没有公开回复正文。`,
+              },
+            ],
+          },
+        };
+        for (const result of [reply, legacy]) {
+          const { node, state } = projectDispatchEvent(result);
+          assert.equal(state.direction, "reply");
+          assert.equal(node.groupTree, "input");
+          assert.deepEqual(state.message.content, [
+            { type: "text", text: "执行已结束，但没有公开回复正文。" },
+          ]);
+        }
       },
     );
   },

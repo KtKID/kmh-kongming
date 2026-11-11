@@ -38,12 +38,13 @@ export function mountDispatchView(ctx: Context): void {
     const NativeUser = native.component as ComponentType<UserViewProps>;
     const kongming = ctx.locale.bind("kongming");
 
-    /** 显示委派状态，展开时复用原生消息组件展示请求正文。 */
+    /** 委派卡片折叠同轮往来；回信卡片仅折叠自身正文。 */
     function DispatchView(props: ChatNodeViewProps<"kongming-dispatch">) {
       const { node } = props;
       const { location, data } = node;
       const turn =
-        location.kind === "step" || location.kind === "turn"
+        data.direction === "request" &&
+        (location.kind === "step" || location.kind === "turn")
           ? location.turn
           : undefined;
       const end = props.useChat(
@@ -72,12 +73,14 @@ export function mountDispatchView(ctx: Context): void {
             }}
           >
             <summary style={{ cursor: "pointer" }}>
-              {kongming("dispatchExchange")} · {status}
+              {data.direction === "reply"
+                ? kongming("dispatchReply")
+                : `${kongming("dispatchExchange")} · ${status}`}
             </summary>
             <div style={{ paddingTop: 12 }}>
               <NativeUser
                 {...props}
-                node={{ ...node, kind: "user", data: data.request }}
+                node={{ ...node, kind: "user", data: data.message }}
                 renderSlotChain={
                   // 折叠内只复用原生消息正文，跳过附加插槽。
                   () => null

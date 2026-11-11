@@ -2,6 +2,7 @@
 export const zh = {
   panel: "孔明",
   dispatchExchange: "孔明 · 会话往来",
+  dispatchReply: "收到会话回信",
   dispatchRunning: "进行中",
   dispatchCompleted: "已完成",
   dispatchStopped: "已结束",
@@ -13,6 +14,7 @@ export const zh = {
 export const en: Record<keyof typeof zh, string> = {
   panel: "Kongming",
   dispatchExchange: "Kongming · Delegation",
+  dispatchReply: "Session reply received",
   dispatchRunning: "In progress",
   dispatchCompleted: "Completed",
   dispatchStopped: "Ended",

@@ -15,15 +15,18 @@ export const DispatchSourceSchema = z.object({
   kind: z.literal("kongming-dispatch"),
 });
 
-/** 兼容历史 kongming-dispatch 与现行 kmh-relay 两种标记的宽松解析（投影用）。 */
+/** 兼容历史委派、回信与现行 kmh-relay 标记（投影用）。 */
 export const AnyRelaySourceSchema = z.object({
   ...sourceFields,
-  kind: z.enum(["kongming-dispatch", "kmh-relay"]),
+  kind: z.enum(["kongming-dispatch", "kongming-reply", "kmh-relay"]),
 });
 
 declare module "@deepseek-ai/dsh-llm" {
   interface MessageSourceMap {
     "kongming-dispatch": z.infer<typeof DispatchSourceSchema>;
+    "kongming-reply": z.infer<typeof AnyRelaySourceSchema> & {
+      kind: "kongming-reply";
+    };
   }
 }
 
