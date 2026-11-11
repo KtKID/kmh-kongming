@@ -13,17 +13,12 @@ import { fileURLToPath } from "node:url";
 import { writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 const config = fileURLToPath(new URL("./cordis.yml", import.meta.url));
+// 孔明与记忆同属一个 bundle，同一份安装 patch 登记两个插件；
 // 现有 Web 用例专测队列和冻结；收尾提醒由独立真实循环用例启用并验证。
 const patches = [
   ...loadOverlayPatches(
     "kongming-test",
     fileURLToPath(new URL("../../cordis.patch.yml", import.meta.url)),
-  ),
-  ...loadOverlayPatches(
-    "memory-test",
-    fileURLToPath(
-      new URL("../../../kongming-memory/cordis.patch.yml", import.meta.url),
-    ),
   ),
 ];
 for (const patch of patches) {

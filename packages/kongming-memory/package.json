@@ -17,7 +17,7 @@
     "test": "node --test test/main-flow.test.ts test/prompt-config.test.ts test/turn-reminder.test.ts test/memory-tool.test.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src build.ts test --max-warnings 0",
-    "format:check": "prettier src build.ts test tsconfig*.json package.json cordis.patch.yml README.md --check"
+    "format:check": "prettier src build.ts test tsconfig*.json package.json README.md --check"
   },
   "peerDependencies": {
     "@deepseek-ai/schemastery": "3.18.6-alpha.1",
@@ -67,11 +67,6 @@
   "peerDependenciesMeta": {
     "@kmh/kongming": {
       "optional": true
-    }
-  },
-  "dsh": {
-    "bundle": {
-      "patch": "./cordis.patch.yml"
     }
   }
 }

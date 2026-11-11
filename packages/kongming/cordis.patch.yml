@@ -1,4 +1,4 @@
-# 孔明插件独立安装时的实例登记。
+# 孔明 bundle 的实例登记：孔明主体与记忆插件同 bundle 提供，记忆不再单独成 bundle。
 - insert:
     - id: kmh-kongming
       name: "@kmh/kongming"
@@ -7,3 +7,20 @@
           你是孔明，一位沉稳、简洁、有主见的顾问。使用现代中文，帮助用户分析和决策，给出明确建议、判断依据和成立条件。
         systemPrompt: >-
           你是孔明，用户的长期助手。
+    - id: kongming-memory-v1
+      name: "@kmh/kongming-memory-v1"
+      config:
+        promptTemplate: |-
+          原始记忆文件：{{originalMemoryPath}}
+          冻结记忆文件：{{frozenMemoryPath}}
+          以下为当前完整冻结记忆：
+          <kongming-memory>
+          {{frozenMemory}}
+          </kongming-memory>
+        reminderPrompt: |-
+          每次完成对话或完成任务后，把有价值的内容和踩坑记录到记忆文件里
+          当前普通任务已经收尾，先判断本轮是否有值得长期保留的偏好、决策、结论或踩坑；寒暄、天气等无关紧要的内容不要记录，与已有记忆重复的内容也不要再记。
+          需要记录时调用 kongming_memory_save 工具追加一条新条目，条目写成后续会话脱离本轮上下文也能独立理解的完整事实；该工具只能新增记忆，不能修改或删除已有条目。工具返回成功即保存完成，失败时向用户说明原因，不要改用其他方式写记忆文件。
+          原始记忆文件：{{originalMemoryPath}}
+          冻结记忆文件：{{frozenMemoryPath}}
+          新记忆只追加进原始文件，冻结文件由插件维护。

@@ -24,7 +24,7 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 ## 启动与配置
 
-已有 KMH 安装与构建环境可通过 Web profile 使用本包。自定义 profile 在依赖中声明 `@kmh/kongming`，并在 `dsh.profile.bundles` 中选择同名 bundle；[安装 patch](cordis.patch.yml) 登记 `kmh-kongming` 实例和默认提示词。
+已有 KMH 安装与构建环境可通过 Web profile 使用本包。自定义 profile 在依赖中同时声明 `@kmh/kongming` 与 `@kmh/kongming-memory-v1`（后者不再是独立 bundle），并在 `dsh.profile.bundles` 中只选择 `@kmh/kongming`；[安装 patch](cordis.patch.yml) 一并登记 `kmh-kongming` 与 `kongming-memory-v1` 两个实例及默认提示词。
 
 启动前将 `KMH_KONGMING_PROJECT_DIR` 设置为实际项目目录的绝对路径。该目录需要存在且可读、可遍历；文件写入遵循当前工具与审批规则。点击「孔明」后，插件准备身份、注册工作区，再通过 DSH 原生导航打开完整会话页。头部、上下文、文件、终端、模型选择和审批由当前 Web 插件组合提供。
 
@@ -70,9 +70,9 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 ## 可选记忆
 
-`@kmh/kongming-memory-v1` 独立提供冻结记忆加载、收尾记录提醒和手动压缩刷新。默认 Web profile 分别选择两个 bundle；只选择孔明时，固定会话、人格、模型和通用工具继续工作。启用记忆时，文件、提示词与权限要求见[记忆插件说明](../kongming-memory-v1/README.md)。
+`@kmh/kongming-memory-v1` 提供冻结记忆加载、收尾记录提醒、专属保存工具和手动压缩刷新，随 `@kmh/kongming` bundle 一并登记，不再是独立 bundle。部署上两者同进同退；运行期仍可在 patch 或配置中单独停用记忆插件，停用后孔明的固定会话、人格、模型和通用工具继续工作。启用记忆时，文件、提示词与权限要求见[记忆插件说明](../kongming-memory/README.md)。
 
-停用记忆插件后，孔明实例、当前任务、会话和已有记忆文件继续保留。后续提示词装配使用孔明及其余已启用插件的贡献。**同一会话的完整请求仍可能携带历史中的记忆内容**：系统提示词更新模式、旧回复、工具结果和已入队提醒的具体规则见[卸载后的系统提示词与历史](../kongming-memory-v1/README.md#卸载后的系统提示词与历史)。
+停用记忆插件后，孔明实例、当前任务、会话和已有记忆文件继续保留。后续提示词装配使用孔明及其余已启用插件的贡献。**同一会话的完整请求仍可能携带历史中的记忆内容**：系统提示词更新模式、旧回复、工具结果和已入队提醒的具体规则见[卸载后的系统提示词与历史](../kongming-memory/README.md#卸载后的系统提示词与历史)。
 
 <!-- prettier-ignore -->
 -----
@@ -146,8 +146,8 @@ node build.ts
 在仓库根目录构建可选记忆，并验证孔明流程：
 
 ```sh
-node packages/kongming-memory-v1/build.ts
-node --test --test-concurrency=1 packages/kmh-kongming/test/*.test.ts
+node packages/kongming-memory/build.ts
+node --test --test-concurrency=1 packages/kongming/test/*.test.ts
 ```
 
 `optional-memory.test.ts` 覆盖独立启动、运行中卸载记忆、后装与重装、固定身份恢复及记忆准备失败后的移除；`prompt.test.ts` 覆盖配置原文与作用域隔离。单会话停止、队列、插话、工具中断和故障恢复的用例归属见单会话回归。
@@ -160,7 +160,7 @@ node --test --test-concurrency=1 packages/kmh-kongming/test/*.test.ts
 
 包 README 保存当前使用与实现契约，规格和任务保存阶段安排及执行记录。
 
-- [独立记忆插件](../kongming-memory-v1/README.md)：冻结文件、收尾 steer、刷新与卸载后的历史。
+- [记忆插件](../kongming-memory/README.md)：冻结文件、专属保存工具、收尾 steer、刷新与卸载后的历史。
 - Web profile：部署选择与项目目录配置。
 - 可选记忆配置升级：bundle、准备接口与扩展接入迁移。
 - 技术设计：阶段范围、完整场景与实现依据。
@@ -178,3 +178,4 @@ node --test --test-concurrency=1 packages/kmh-kongming/test/*.test.ts
 ## 从 Web 会话发布明庭任务
 
 明庭任务发布插件已迁移为独立仓库 [kmh-mingting](../kmh-plugin/kmh-mingting/README.md)（submodule 挂载于 `packages/kmh-plugin/kmh-mingting`），配置项、工具行为与启用方式见该包 README。
+

@@ -26,14 +26,14 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 ## 接入与记忆文件
 
-默认 Web profile 分别选择 `@kmh/kongming` 与 `@kmh/kongming-memory-v1` bundle。自定义 profile 在依赖中声明所需包，并在 `dsh.profile.bundles` 中选择对应 bundle；本包的 [cordis.patch.yml](cordis.patch.yml) 登记 `kongming-memory-v1` 实例与默认文案。记忆插件通过孔明公开 Agent 事件接入当前和后续会话。
+本包与孔明主体同属一个 bundle：`@kmh/kongming` bundle 的[安装 patch](../kongming/cordis.patch.yml) 同时登记 `kmh-kongming` 与 `kongming-memory-v1` 两个实例，本包不再单独成 bundle。自定义 profile 在依赖中声明 `@kmh/kongming` 与 `@kmh/kongming-memory-v1` 两个包，在 `dsh.profile.bundles` 中只选择 `@kmh/kongming` 即可同时启用两者。记忆插件通过孔明公开 Agent 事件接入当前和后续会话。
 
 文件使用服务端 home，KMH 启动器将 `KMH_HOME` 映射为 `DSH_HOME`。同一 home 下，两份文件各有职责。
 
-| 文件                                   | 用途与更新时机                                                                 |
-| -------------------------------------- | ------------------------------------------------------------------------------ |
-| `$KMH_HOME/.kongming/MEMORY.md`        | 原始记忆；首次缺失时补齐为空文件，助手通过通用文件工具维护有价值的新增和修改。 |
-| `$KMH_HOME/.kongming/MEMORY.frozen.md` | 冻结记忆；启动绑定时按原始文件重发，原始为空时保留已有快照，每次装配完整读取。 |
+| 文件                                   | 用途与更新时机                                                                               |
+| -------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `$KMH_HOME/.kongming/MEMORY.md`        | 原始记忆；首次缺失时补齐为空文件，日常新增经孔明专属 `kongming_memory_save` 工具追加到末尾。 |
+| `$KMH_HOME/.kongming/MEMORY.frozen.md` | 冻结记忆；启动绑定时按原始文件重发，原始为空时保留已有快照，每次装配完整读取。               |
 
 原始记忆的日常修改与当前冻结版本相互独立。冻结的更新入口有两个：启动绑定孔明会话时按原始文件重发，以及手动 `/compact` 的成功回执；插件核对对应摘要与压缩提交记录后，将最新原始字节经临时文件完整替换为冻结文件。直接调用底座 `compactNow()` 的集成方需将成功结果传给公开服务的 `refreshFrozen(result)`。自动压缩与超限压缩的阶段归属见末尾开发备注。
 
@@ -41,7 +41,7 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 ## 提示词配置
 
-本包分别配置系统记忆上下文和任务收尾提醒。完整默认文案集中保存在[记忆安装 patch](cordis.patch.yml)，孔明自身的人格与身份由[孔明插件](../kmh-kongming/README.md#启动与配置)配置。
+本包分别配置系统记忆上下文和任务收尾提醒。完整默认文案集中保存在[孔明 bundle 安装 patch](../kongming/cordis.patch.yml)，孔明自身的人格与身份由[孔明插件](../kongming/README.md#启动与配置)配置。
 
 | 配置键           | Schema 默认值    | 内容与送达位置                                                                              |
 | ---------------- | ---------------- | ------------------------------------------------------------------------------------------- |
@@ -124,7 +124,7 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 | [test/prompt-config.test.ts](test/prompt-config.test.ts)                                                                     | P05–P06：完整模板、字面量保持与无效配置拒绝。                                                                                      |
 | [test/turn-reminder.test.ts](test/turn-reminder.test.ts)                                                                     | R01–R06：同轮保存工具、去重、输出上限、错误取消、重新绑定与配置空值。                                                              |
 | [test/memory-tool.test.ts](test/memory-tool.test.ts)                                                                         | T01–T04：收尾提醒引导工具追加、空白条目拒绝、分隔与串行落盘、普通 Agent 越权失败。                                                 |
-| [孔明可选记忆测试](../kmh-kongming/test/optional-memory.test.ts)                                                             | O01–O05：基础孔明独立运行，记忆在执行或组装等待期间卸载，后装/重装及准备失败后的移除。默认 mock 路由覆盖开头系统提示词的替换模式。 |
+| [孔明可选记忆测试](../kongming/test/optional-memory.test.ts)                                                                 | O01–O05：基础孔明独立运行，记忆在执行或组装等待期间卸载，后装/重装及准备失败后的移除。默认 mock 路由覆盖开头系统提示词的替换模式。 |
 | [冻结骨架](test/frozen-memory.test.ts)、[边界骨架](test/frozen-memory-boundaries.test.ts)、[提醒骨架](test/reminder.test.ts) | 保留 48 个设计编号；各变体的实施状态由测试设计维护。                                                                               |
 
 `in-history` 路由需要额外核对整个请求中的多个系统消息。普通 mock 路由的卸载断言与该路径分别取证，完整请求中的正文残留和最新系统提示词的内容分别判定。
@@ -143,13 +143,13 @@ node packages/kongming-memory/build.ts
 node --test packages/kongming-memory/test/main-flow.test.ts packages/kongming-memory/test/prompt-config.test.ts packages/kongming-memory/test/turn-reminder.test.ts packages/kongming-memory/test/memory-tool.test.ts
 ```
 
-孔明可选插件生命周期的构建与测试入口见[孔明开发验证](../kmh-kongming/README.md#开发验证)。包的 `typecheck`、`lint`、`format:check` 检查源码、测试、构建和配置。真实模型的信息价值判断、合并与摘要质量需要真实模型验收；上述流程测试覆盖确定性的事件、文件和请求链路。
+孔明可选插件生命周期的构建与测试入口见[孔明开发验证](../kongming/README.md#开发验证)。包的 `typecheck`、`lint`、`format:check` 检查源码、测试、构建和配置。真实模型的信息价值判断、合并与摘要质量需要真实模型验收；上述流程测试覆盖确定性的事件、文件和请求链路。
 
 ## 归属与相关文档
 
 当前使用规则由本页维护，源码保存精确 API 与实现，任务文档保存各阶段范围和实际证据。
 
-- [孔明插件](../kmh-kongming/README.md)：固定会话、人格与公开扩展事件。
+- [孔明插件](../kongming/README.md)：固定会话、人格与公开扩展事件。
 - 可选记忆配置升级：独立 bundle 与准备接口迁移。
 - 冻结主链路任务：首次复制、完整加载及手动刷新证据。
 - 启动重发任务：启动绑定重发、空冻结自愈及原始为空保留证据。
