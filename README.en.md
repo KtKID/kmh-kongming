@@ -19,7 +19,7 @@ Kongming is a persistent assistant for [DeepSeek Harness](https://www.deepseek.c
 - **Delegate to another model.** Ask Kongming to start a new session with a model you have configured. When that session finishes, its result returns to Kongming. Expand **Kongming · Delegation** in the target session to see the original task and reply.
 - **Keep long-term memory.** At the end of a task, Kongming can save preferences, decisions, and lessons worth carrying into future conversations.
 
-[Watch the Kongming demo (MP4)](docs/assets/media.mp4)
+https://github.com/user-attachments/assets/ba677d8f-9d12-401b-9202-4485717ad91c
 
 ## How it works
 
