@@ -56,12 +56,14 @@ const releaseManifest = {
   name: manifest.name,
   version: manifest.version,
   description: manifest.description,
+  icon: manifest.icon,
   type: manifest.type,
   main: manifest.main,
   engines: { dsh: dshVersions },
   exports: {
     ...manifest.exports,
     "./memory": "./lib/memory/index.js",
+    "./memory/icon": "./memory-icon.png",
   },
   dsh: manifest.dsh,
   files: [
@@ -72,6 +74,8 @@ const releaseManifest = {
     "events.d.ts",
     "LICENSE-session-kit",
     "LICENSE-zod",
+    manifest.icon,
+    "memory-icon.png",
     patchFile,
   ],
   peerDependencies,
@@ -86,6 +90,11 @@ try {
     recursive: true,
   });
   await cp(join(kongming, "events.d.ts"), join(staging, "events.d.ts"));
+  await cp(join(kongming, manifest.icon), join(staging, releaseManifest.icon));
+  await cp(
+    join(memory, memoryManifest.icon),
+    join(staging, releaseManifest.exports["./memory/icon"]),
+  );
   await cp(
     join(kongming, "src/dispatch/session-kit/LICENSE"),
     join(staging, "LICENSE-session-kit"),
@@ -130,6 +139,11 @@ try {
       [manifest.main, rootManifest.exports["."]],
       [releaseManifest.exports["./memory"], rootManifest.exports["./memory"]],
       [patchFile, rootManifest.dsh.bundle.patch],
+      [releaseManifest.icon, rootManifest.icon],
+      [
+        releaseManifest.exports["./memory/icon"],
+        rootManifest.exports["./memory/icon"],
+      ],
       ["LICENSE-session-kit", "prebuilt/LICENSE-session-kit"],
       ["LICENSE-zod", "prebuilt/LICENSE-zod"],
     ];

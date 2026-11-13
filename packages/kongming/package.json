@@ -1,9 +1,10 @@
 {
   "name": "@kmh/kongming",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "type": "module",
   "description": "孔明固定会话、原生聊天与可选能力扩展",
+  "icon": "./icon.png",
   "main": "lib/src/index.js",
   "exports": {
     ".": {
