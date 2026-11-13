@@ -6,7 +6,7 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 ## 概述
 
-`@kmh/kongming` 在 Web 侧栏提供「孔明」入口，点击后打开固定的原生聊天。每个服务端 home 保存一个助手身份，支持连续追问、流式回复、通用文件工具和重启恢复。模型、技能、工具和审批沿用当前 Web 预设。部署可单独选择孔明，也可配合独立记忆插件保存长期信息。
+`@kmh/kongming` 在 Web 侧栏提供「孔明」入口，点击后打开固定的原生聊天。每个服务端 home 保存一个助手身份，支持连续追问、流式回复、通用文件工具和重启恢复。模型、技能、工具和审批沿用当前 Web 预设。安装时默认启用记忆，可在 Web 配置中单独停用。
 
 ## 目录
 
@@ -24,15 +24,15 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 ## 启动与配置
 
-已有 KMH 安装与构建环境可通过 Web profile 使用本包。自定义 profile 在依赖中同时声明 `@kmh/kongming` 与 `@kmh/kongming-memory-v1`（后者不再是独立 bundle），并在 `dsh.profile.bundles` 中只选择 `@kmh/kongming`；[安装 patch](cordis.patch.yml) 一并登记 `kmh-kongming` 与 `kongming-memory-v1` 两个实例及默认提示词。
+首次使用请按[安装与启用](../../README.md#安装与启用)在 DeepSeek Harness 中添加孔明。[安装配置](cordis.patch.yml)定义孔明和记忆两个实例及其默认提示词。源码集成方式见 [KMH 集成说明](../../docs/kmh-integration.md)。
 
-启动前将 `KMH_KONGMING_PROJECT_DIR` 设置为实际项目目录的绝对路径。该目录需要存在且可读、可遍历；文件写入遵循当前工具与审批规则。点击「孔明」后，插件准备身份、注册工作区，再通过 DSH 原生导航打开完整会话页。头部、上下文、文件、终端、模型选择和审批由当前 Web 插件组合提供。
+首次点击「孔明」会在 Harness 数据目录下建立专用工作区。也可以在首次打开前将 `projectDir` 配置为已存在、可读且可遍历的绝对路径。文件写入遵循宿主的工具与审批规则。插件准备固定身份并注册工作区，再通过 Harness 原生导航打开会话。
 
 ### 侧栏专属入口
 
 点击侧栏「孔明」直接打开原固定聊天。插件启用期间，普通侧栏的工作区分组和平铺列表隐藏这条会话，包括刷新后已存在的会话。原聊天历史、会话 ID 和工作目录继续沿用，其他会话照常显示。侧栏搜索使用宿主自身的结果规则。
 
-本包拥有两项提示词配置，部署文案集中保存在安装 patch。
+本包的提示词配置如下，默认文案集中保存在安装配置中。
 
 | 配置键              | Schema 默认值 | 行为                                       |
 | ------------------- | ------------- | ------------------------------------------ |
@@ -74,7 +74,7 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 ## 可选记忆
 
-`@kmh/kongming-memory-v1` 提供冻结记忆加载、收尾记录提醒、专属保存工具和手动压缩刷新，随 `@kmh/kongming` bundle 一并登记，不再是独立 bundle。部署上两者同进同退；运行期仍可在 patch 或配置中单独停用记忆插件，停用后孔明的固定会话、人格、模型和通用工具继续工作。启用记忆时，文件、提示词与权限要求见[记忆插件说明](../kongming-memory/README.md)。
+`@kmh/kongming-memory-v1` 提供冻结记忆加载、收尾记录提醒、专属保存工具和手动压缩刷新，随 `@kmh/kongming` bundle 一并安装。宿主配置可[单独停用记忆实例](../../docs/kmh-integration.md)。停用后，固定会话、人格、模型和通用工具继续工作。文件、提示词与权限要求见[记忆插件说明](../kongming-memory/README.md)。
 
 停用记忆插件后，孔明实例、当前任务、会话和已有记忆文件继续保留。后续提示词装配使用孔明及其余已启用插件的贡献。**同一会话的完整请求仍可能携带历史中的记忆内容**：系统提示词更新模式、旧回复、工具结果和已入队提醒的具体规则见[卸载后的系统提示词与历史](../kongming-memory/README.md#卸载后的系统提示词与历史)。
 
@@ -156,7 +156,7 @@ node --test --test-concurrency=1 packages/kongming/test/*.test.ts
 
 `optional-memory.test.ts` 覆盖独立启动、运行中卸载记忆、后装与重装、固定身份恢复及记忆准备失败后的移除；`prompt.test.ts` 覆盖配置原文与作用域隔离。单会话停止、队列、插话、工具中断和故障恢复的用例归属见单会话回归。
 
-测试组合使用本包声明的 `dsh-api-remote-access`、`dsh-tool-executor-native` 和 `dsh-tool-testkit`：前者接入真实 Gateway 授权服务，后两者分别提供 Loader 的工具执行与标准工具夹具。内存宿主的 AgentLoop testkit 已挂载执行器。`control.test.ts` 覆盖控制入口鉴权、固定身份限制、暂停去重、消息身份及旧控制器释放。当前升级工作区的依赖锁文件边界与执行记录见[上游兼容修复报告](reports/fix/fix-report-20261031-kongming.md)。
+测试组合使用本包声明的 `dsh-api-remote-access`、`dsh-tool-executor-native` 和 `dsh-tool-testkit`：前者接入真实 Gateway 授权服务，后两者分别提供 Loader 的工具执行与标准工具夹具。内存宿主的 AgentLoop testkit 已挂载执行器。`control.test.ts` 覆盖控制入口鉴权、固定身份限制、暂停去重、消息身份及旧控制器释放。
 
 包的 `typecheck` 检查宿主、浏览器、测试与构建工具，`lint`、`format:check` 覆盖对应源码与配置。实际浏览器验收场景和历史执行证据见首阶段开发报告。
 
@@ -165,7 +165,7 @@ node --test --test-concurrency=1 packages/kongming/test/*.test.ts
 包 README 保存当前使用与实现契约，规格和任务保存阶段安排及执行记录。
 
 - [记忆插件](../kongming-memory/README.md)：冻结文件、专属保存工具、收尾 steer、刷新与卸载后的历史。
-- Web profile：部署选择与项目目录配置。
+- [安装与启用](../../README.md#安装与启用)：Web profile、构建和项目目录配置。
 - 可选记忆配置升级：bundle、准备接口与扩展接入迁移。
 - 技术设计：阶段范围、完整场景与实现依据。
 - TypeScript 任务：构建、测试、夹具与验收脚本的语言迁移记录。
@@ -181,7 +181,7 @@ node --test --test-concurrency=1 packages/kongming/test/*.test.ts
 
 ## 从 Web 会话发布明庭任务
 
-明庭任务发布插件已迁移为独立仓库 [kmh-mingting](../kmh-plugin/kmh-mingting/README.md)（submodule 挂载于 `packages/kmh-plugin/kmh-mingting`），配置项、工具行为与启用方式见该包 README。
+Web 会话发布明庭任务由 [kmh-mingting](https://github.com/KtKID/kmh-mingting) 提供。该仓库的 README 说明配置、工具和启用方式。
 
 ## 变更记录
 

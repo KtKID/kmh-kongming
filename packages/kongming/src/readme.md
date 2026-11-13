@@ -26,9 +26,9 @@
 
 宿主对外提供两个已鉴权 HTTP 接口（实现在 [session/web.ts](session/web.ts)）：
 
-| 接口 | 作用 |
-| --- | --- |
-| `POST /api/kmh-kongming/ensure` | 准备固定会话，返回 `{sessionId, cwd}` 供原生导航 |
+| 接口                             | 作用                                                         |
+| -------------------------------- | ------------------------------------------------------------ |
+| `POST /api/kmh-kongming/ensure`  | 准备固定会话，返回 `{sessionId, cwd}` 供原生导航             |
 | `POST /api/kmh-kongming/control` | 按 `action` 执行 `prompt` / `stop` / `resume` / `supplement` |
 
 孔明会话里的模型额外获得两个工具（实现在 [dispatch/tools.ts](dispatch/tools.ts)）：`kongming_list_models` 列出可用模型，`kongming_dispatch` 创建普通会话并排队一个任务，结果自动回传。
@@ -41,13 +41,13 @@
 
 各子目录的代码说明在它们自己的 readme 里：
 
-| 目录 | 负责什么 | readme |
-| --- | --- | --- |
-| [session/](session/) | 固定会话宿主侧：身份、运行时、提示词、控制与 HTTP 接口 | [session/readme.md](session/readme.md) |
-| [session/client/](session/client/) | 固定会话浏览器侧：侧栏入口与准备面板 | [session/client/readme.md](session/client/readme.md) |
-| [dispatch/](dispatch/) | 跨会话委派宿主侧：工具、校验、目标会话准备与回传 | [dispatch/readme.md](dispatch/readme.md) |
-| [dispatch/client/](dispatch/client/) | 委派浏览器侧：事件投影与折叠视图 | [dispatch/client/readme.md](dispatch/client/readme.md) |
-| [client/](client/) | 浏览器半总入口与词典 | [client/readme.md](client/readme.md) |
+| 目录                                 | 负责什么                                               | readme                                                 |
+| ------------------------------------ | ------------------------------------------------------ | ------------------------------------------------------ |
+| [session/](session/)                 | 固定会话宿主侧：身份、运行时、提示词、控制与 HTTP 接口 | [session/readme.md](session/readme.md)                 |
+| [session/client/](session/client/)   | 固定会话浏览器侧：侧栏入口与准备面板                   | [session/client/readme.md](session/client/readme.md)   |
+| [dispatch/](dispatch/)               | 跨会话委派宿主侧：工具、校验、目标会话准备与回传       | [dispatch/readme.md](dispatch/readme.md)               |
+| [dispatch/client/](dispatch/client/) | 委派浏览器侧：事件投影与折叠视图                       | [dispatch/client/readme.md](dispatch/client/readme.md) |
+| [client/](client/)                   | 浏览器半总入口与词典                                   | [client/readme.md](client/readme.md)                   |
 
 ### [index.ts](index.ts) — 宿主插件入口
 
@@ -59,8 +59,8 @@
 
 #### 关键函数
 
-| 函数及源码链接 | 负责什么 | 主要输入和结果 | 关键处理或限制 |
-| --- | --- | --- | --- |
+| 函数及源码链接          | 负责什么 | 主要输入和结果                             | 关键处理或限制                                   |
+| ----------------------- | -------- | ------------------------------------------ | ------------------------------------------------ |
 | [`apply`](index.ts#L29) | 插件入口 | 收到宿主上下文和配置，建立运行时并发布服务 | 恢复失败仅告警；卸载时由运行时注册的 effect 收尾 |
 
 ### [config.ts](config.ts) — 配置声明
@@ -73,16 +73,16 @@
 
 **功能**：告诉插件"数据在哪、项目在哪"，并校验项目目录可用。
 
-**实现原理**：`runtimePaths()` 用 `resolveDshHome` 解析 home（与启动器的 `DSH_HOME` 映射一致），项目目录取环境变量 `KMH_KONGMING_PROJECT_DIR`，缺省为空串。`validateProjectDir()` 要求绝对路径、目标是目录、且进程对它有读和遍历权限，失败时错误信息带上目录和原因。
+**实现原理**：`runtimePaths()` 用 `resolveDshHome` 解析数据目录，工作目录优先取插件配置 `projectDir`，其次取环境变量 `KMH_KONGMING_PROJECT_DIR`。两项都为空时，运行时沿用已有绑定，首次使用则在数据目录下建立 `.kongming/workspace`。`validateProjectDir()` 校验目录为可读、可遍历的绝对路径。
 
-**设计取舍**：目录由部署显式给出而不是自动猜当前目录，避免孔明把工作目录漂移到不可控的位置；校验放在每次准备和每次委派前，目录不可用时第一时间报人能看懂的错误。
+**设计取舍**：默认工作区跟随 Harness 数据目录，已有身份沿用已保存的路径。准备会话和委派前都校验目录，目录不可用时返回具体原因。
 
 #### 关键函数
 
-| 函数及源码链接 | 负责什么 | 主要输入和结果 | 关键处理或限制 |
-| --- | --- | --- | --- |
-| [`runtimePaths`](paths.ts#L12) | 解析运行路径 | 可注入环境变量（默认进程环境），返回 `{home, projectDir}` | 项目目录未配置时为空串，由后续校验兜底 |
-| [`validateProjectDir`](paths.ts#L21) | 校验项目目录 | 收到路径，目录可读可遍历时完成 | 非绝对路径、目标为文件、无权限都直接抛错并附原因 |
+| 函数及源码链接                       | 负责什么     | 主要输入和结果                                            | 关键处理或限制                                   |
+| ------------------------------------ | ------------ | --------------------------------------------------------- | ------------------------------------------------ |
+| [`runtimePaths`](paths.ts#L12)       | 解析运行路径 | 可注入环境变量（默认进程环境），返回 `{home, projectDir}` | 项目目录未配置时为空串，由后续校验兜底           |
+| [`validateProjectDir`](paths.ts#L21) | 校验项目目录 | 收到路径，目录可读可遍历时完成                            | 非绝对路径、目标为文件、无权限都直接抛错并附原因 |
 
 ## spec 索引
 
@@ -90,13 +90,13 @@ spec 保存在仓库 [docs/spec/](../../../docs/spec/) 下。检索范围：`doc
 
 已核对的 spec（spec 有明确定义、开发记录指向本目录、当前代码实现对应行为）：
 
-| Spec 章节 | 定义了什么 | 与模块的关系及依据 |
-| --- | --- | --- |
-| [feat01 孔明委派查询并收回回复](../../../docs/spec/kongming-session-dispatch-mvp/spec.md#feat01-孔明委派天气查询并收回回复) | 场景1 新建指定模型会话执行查询；场景2 模型不可用时明确受阻；场景3 排队委派被移除后回传取消 | `dispatch/` 实现（[submit.ts](dispatch/submit.ts) 场景2、[relay.ts](dispatch/relay.ts) 场景1/3）。依据[技术设计 · 模块与数据归属](../../../docs/spec/kongming-session-dispatch-mvp/tech-design.md#模块与数据归属)、[开发回执](../../../docs/spec/kongming-session-dispatch-mvp/tasks/task-session-dispatch/dev-report.md)与[排队取消任务](../../../docs/spec/kongming-session-dispatch-mvp/tasks/task-dispatch-queue-cancellation.md)。真实浏览器验收：MiniMax 委派闭环已核对，glm-5.3-flash 原始用例与界面专项待完成（以开发回执口径为准） |
-| [feat02 区分孔明往来与用户直接聊天](../../../docs/spec/kongming-session-dispatch-mvp/spec.md#feat02-区分孔明往来与用户直接聊天) | 委派请求与回复默认折叠、来源可识别、可展开；用户直接聊天保持原生展示 | [dispatch/client/](dispatch/client/readme.md) 的投影与折叠视图实现；用户消息不匹配来源 schema，继续走原生节点。依据技术设计 D3 与[界面行为](../../../docs/spec/kongming-session-dispatch-mvp/tech-design.md#界面行为)章节 |
-| [技术设计 · 设计决策 D1–D4](../../../docs/spec/kongming-session-dispatch-mvp/tech-design.md#设计决策) | 工具挂孔明作用域（D1）、原生队列 + 持久化来源 + 按轮次关联（D2）、折叠节点复用原生渲染（D3）、真实优先测试（D4） | D1 → [dispatch/tools.ts](dispatch/tools.ts)；D2 → [dispatch/relay.ts](dispatch/relay.ts) + [dispatch/protocol.ts](dispatch/protocol.ts)；D3 → [dispatch/client/view.tsx](dispatch/client/view.tsx)。依据同文件"模块与数据归属" |
-| [排队委派移除后回传取消 · 任务记录](../../../docs/spec/kongming-session-dispatch-mvp/tasks/task-dispatch-queue-cancellation.md) | feat01 场景3 的实现与测试任务 | 已交付：[dispatch/relay.ts](dispatch/relay.ts) 的 `agent/inbox/discarded` 监听 + 微任务复查队列。注意该文写于目录重构前，其 `src/dispatch.ts` 链接对应现 [relay.ts](dispatch/relay.ts)；测试报告在 [reports/session-dispatch-queue-cancellation/](../../../reports/session-dispatch-queue-cancellation/) |
-| [委派架构时序图](../../../docs/architecture/kongming-dispatch.html) | 委派全链路的可视化时序 | 参考材料，与 relay/submit 的实际链路一致 |
+| Spec 章节                                                                                                                       | 定义了什么                                                                                                       | 与模块的关系及依据                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [feat01 孔明委派查询并收回回复](../../../docs/spec/kongming-session-dispatch-mvp/spec.md#feat01-孔明委派天气查询并收回回复)     | 场景1 新建指定模型会话执行查询；场景2 模型不可用时明确受阻；场景3 排队委派被移除后回传取消                       | `dispatch/` 实现（[submit.ts](dispatch/submit.ts) 场景2、[relay.ts](dispatch/relay.ts) 场景1/3）。依据[技术设计 · 模块与数据归属](../../../docs/spec/kongming-session-dispatch-mvp/tech-design.md#模块与数据归属)、[开发回执](../../../docs/spec/kongming-session-dispatch-mvp/tasks/task-session-dispatch/dev-report.md)与[排队取消任务](../../../docs/spec/kongming-session-dispatch-mvp/tasks/task-dispatch-queue-cancellation.md)。真实浏览器验收：MiniMax 委派闭环已核对，glm-5.3-flash 原始用例与界面专项待完成（以开发回执口径为准） |
+| [feat02 区分孔明往来与用户直接聊天](../../../docs/spec/kongming-session-dispatch-mvp/spec.md#feat02-区分孔明往来与用户直接聊天) | 委派请求与回复默认折叠、来源可识别、可展开；用户直接聊天保持原生展示                                             | [dispatch/client/](dispatch/client/readme.md) 的投影与折叠视图实现；用户消息不匹配来源 schema，继续走原生节点。依据技术设计 D3 与[界面行为](../../../docs/spec/kongming-session-dispatch-mvp/tech-design.md#界面行为)章节                                                                                                                                                                                                                                                                                                                   |
+| [技术设计 · 设计决策 D1–D4](../../../docs/spec/kongming-session-dispatch-mvp/tech-design.md#设计决策)                           | 工具挂孔明作用域（D1）、原生队列 + 持久化来源 + 按轮次关联（D2）、折叠节点复用原生渲染（D3）、真实优先测试（D4） | D1 → [dispatch/tools.ts](dispatch/tools.ts)；D2 → [dispatch/relay.ts](dispatch/relay.ts) + [dispatch/protocol.ts](dispatch/protocol.ts)；D3 → [dispatch/client/view.tsx](dispatch/client/view.tsx)。依据同文件"模块与数据归属"                                                                                                                                                                                                                                                                                                              |
+| [排队委派移除后回传取消 · 任务记录](../../../docs/spec/kongming-session-dispatch-mvp/tasks/task-dispatch-queue-cancellation.md) | feat01 场景3 的实现与测试任务                                                                                    | 已交付：[dispatch/relay.ts](dispatch/relay.ts) 的 `agent/inbox/discarded` 监听 + 微任务复查队列。注意该文写于目录重构前，其 `src/dispatch.ts` 链接对应现 [relay.ts](dispatch/relay.ts)；测试报告在 [reports/session-dispatch-queue-cancellation/](../../../reports/session-dispatch-queue-cancellation/)                                                                                                                                                                                                                                    |
+| [委派架构时序图](../../../docs/architecture/kongming-dispatch.html)                                                             | 委派全链路的可视化时序                                                                                           | 参考材料，与 relay/submit 的实际链路一致                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 外部依赖（非本模块 spec，注明作用）：[../events.d.ts](../events.d.ts) 定义的三个 `kongming/*` 公开事件是可选能力插件（如 kongming-memory-v1）的接入契约，由 [session/runtime.ts](session/runtime.ts) 发布和串行等待。
 

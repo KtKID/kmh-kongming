@@ -9,6 +9,6 @@
     "prettier": "^3.7.0"
   },
   "scripts": {
-    "postinstall": "node scripts/link-session-kit.mjs"
+    "pack:dsh": "node scripts/pack-dsh.mjs"
   }
 }

@@ -46,6 +46,28 @@ function send(agent: Agent, text: string) {
   return agent.whenIdle();
 }
 
+await test("默认工作区支持首次打开并恢复已有项目绑定", async () => {
+  const root = await mkdtemp(join(tmpdir(), "kongming-default-workspace-"));
+  const first = await setup(root);
+  try {
+    const runtime = new KongmingRuntime(first.ctx, defaultConfig(), {
+      ...first.paths,
+      projectDir: "",
+    });
+    const initial = await runtime.ensure();
+    assert.equal(initial.cwd, join(first.paths.home, ".kongming", "workspace"));
+    await runtime.close();
+    const reopened = new KongmingRuntime(first.ctx, defaultConfig(), {
+      ...first.paths,
+      projectDir: "",
+    });
+    assert.deepEqual(await reopened.ensure(), initial);
+  } finally {
+    await first.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 await test("S19: native restoration receives Kongming persona and frozen memory before opening the plugin entry", async () => {
   const root = await mkdtemp(join(tmpdir(), "kmh-kongming-native-restore-"));
   const paths = { home: join(root, "home"), projectDir: join(root, "proj") };

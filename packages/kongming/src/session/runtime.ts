@@ -1,4 +1,6 @@
 /** 固定会话运行时：复用生产 Session Controller 的创建、恢复和模型选择。 */
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import type { Context } from "@deepseek-ai/cordis";
 import type { Agent } from "@deepseek-ai/dsh-agent";
 import { SessionId } from "@deepseek-ai/dsh-session";
@@ -94,9 +96,14 @@ export class KongmingRuntime {
 
   /** 按固定身份创建或恢复会话，保存后关联工作区并提交身份。 */
   private async ensureOnce(): Promise<EnsureResult> {
-    await validateProjectDir(this.paths.projectDir);
-    const binding = await this.store.loadOrReserve(this.paths.projectDir);
-    if (binding.cwd !== this.paths.projectDir)
+    const existing = await this.store.readExisting();
+    const defaultDir = join(this.store.directory, "workspace");
+    const cwd = this.paths.projectDir || existing?.cwd || defaultDir;
+    if (this.paths.projectDir === "" && existing === undefined)
+      await mkdir(defaultDir, { recursive: true, mode: 0o700 });
+    await validateProjectDir(cwd);
+    const binding = await this.store.loadOrReserve(cwd);
+    if (binding.cwd !== cwd)
       throw Error(`孔明工作目录已绑定为 ${binding.cwd}，请使用该目录继续交流`);
     this.binding = binding;
     const id = SessionId(binding.sessionId);

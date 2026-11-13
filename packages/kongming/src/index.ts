@@ -27,7 +27,11 @@ declare module "@deepseek-ai/cordis" {
 }
 /** 创建固定会话运行时，尝试恢复已有身份，再发布服务与 HTTP 接口。 */
 export async function apply(ctx: Context, config: Config): Promise<void> {
-  const runtime = new KongmingRuntime(ctx, config, runtimePaths());
+  const runtime = new KongmingRuntime(
+    ctx,
+    config,
+    runtimePaths(config.projectDir),
+  );
   try {
     await runtime.restoreExisting();
   } catch (error) {

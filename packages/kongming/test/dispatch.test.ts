@@ -12,7 +12,7 @@ import {
   type GenerateOptions,
   type StreamChunk,
 } from "@deepseek-ai/dsh-llm";
-import { RelaySourceSchema } from "@kmh/session-kit";
+import { RelaySourceSchema } from "../lib/src/dispatch/session-kit/protocol.js";
 import { dispatchInput } from "../src/dispatch/client/projection.ts";
 import {
   messageText,

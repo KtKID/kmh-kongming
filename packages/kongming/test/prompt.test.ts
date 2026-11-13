@@ -85,7 +85,11 @@ await test("P01：自定义文案逐字装配，孔明身份和维护约定由�
 });
 
 await test("P02：默认 schema 与显式空配置保持空文案，冻结正文仍完整注入", async () => {
-  assert.deepEqual(Config({}), { personalityPrompt: "", systemPrompt: "" });
+  assert.deepEqual(Config({}), {
+    projectDir: "",
+    personalityPrompt: "",
+    systemPrompt: "",
+  });
   await fixture(
     Config({ personalityPrompt: "", systemPrompt: "" }),
     async ({ send }) => {

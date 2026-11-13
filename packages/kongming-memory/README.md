@@ -26,7 +26,7 @@ description: 孔明独立记忆插件的冻结加载、收尾 steer、手动压�
 
 ## 接入与记忆文件
 
-本包与孔明主体同属一个 bundle：`@kmh/kongming` bundle 的[安装 patch](../kongming/cordis.patch.yml) 同时登记 `kmh-kongming` 与 `kongming-memory-v1` 两个实例，本包不再单独成 bundle。自定义 profile 在依赖中声明 `@kmh/kongming` 与 `@kmh/kongming-memory-v1` 两个包，在 `dsh.profile.bundles` 中只选择 `@kmh/kongming` 即可同时启用两者。记忆插件通过孔明公开 Agent 事件接入当前和后续会话。
+记忆随孔明一起安装，完整步骤见[安装与启用](../../README.md#安装与启用)。`@kmh/kongming` bundle 的[安装配置](../kongming/cordis.patch.yml)默认启用 `kmh-kongming` 与 `kongming-memory-v1` 两个实例。记忆插件通过孔明公开的 Agent 事件接入当前和后续会话。
 
 文件使用服务端 home，KMH 启动器将 `KMH_HOME` 映射为 `DSH_HOME`。同一 home 下，两份文件各有职责。
 

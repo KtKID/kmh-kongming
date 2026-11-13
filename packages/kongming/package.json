@@ -1,6 +1,6 @@
 {
   "name": "@kmh/kongming",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "孔明固定会话、原生聊天与可选能力扩展",
@@ -150,7 +150,6 @@
     "@deepseek-ai/schemastery": "3.18.6-alpha.2",
     "@eslint/js": "^9.39.0",
     "@kmh/kongming-memory-v1": "workspace:*",
-    "@kmh/session-kit": "link:../../../kmh-session-kit",
     "@types/node": "^22.20.0",
     "@types/react": "^18.3.31",
     "esbuild": "^0.28.1",
