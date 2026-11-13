@@ -84,6 +84,11 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
           required: true,
           description: "Exact model ID.",
         },
+        title: {
+          type: "string",
+          description:
+            "Title shown in the session list. Use the user's requested name, or write a short task-specific title in the user's language.",
+        },
         content: {
           type: "array",
           items: { type: "object", additionalProperties: true },
@@ -107,11 +112,14 @@ export function mountDispatch(ctx: Context, source: Agent): () => void {
         ],
       },
       /** 准备目标会话并发送任务，入队成功后返回委派与会话 ID。 */
-      async execute({ provider, model, content, cwd }, { agent, signal }) {
+      async execute(
+        { provider, model, title, content, cwd },
+        { agent, signal },
+      ) {
         const { sessionId, admitted } = await prepareDispatch(
           ctx,
           source,
-          { provider, model, content, cwd },
+          { provider, model, title, content, cwd },
           signal,
           // 跨越异步步骤后，用原调用身份和取消信号重新校验。
           () => requireSource(agent, signal),

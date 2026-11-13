@@ -62,6 +62,26 @@ class BrowserMock extends MockAdapter {
     const results = options.messages
       .slice((lastUser ? options.messages.indexOf(lastUser) : -1) + 1)
       .filter((m) => m.role === "tool");
+    if (text === "请委派查询杭州天气") {
+      if (
+        results.length === 0 &&
+        options.tools?.some(({ name }) => name === "kongming_dispatch")
+      ) {
+        yield* toolCallResponse(
+          "kongming_dispatch",
+          {
+            provider: "mock",
+            model: "mock",
+            title: "杭州天气预报",
+            content: [{ type: "text", text: "查询杭州天气" }],
+          },
+          "browser-dispatch-title",
+        );
+        return;
+      }
+      yield* textResponse("杭州天气委派已提交。");
+      return;
+    }
     if (text.includes("受控任务")) {
       const ready = Promise.withResolvers<void>();
       const abort = () => ready.resolve();

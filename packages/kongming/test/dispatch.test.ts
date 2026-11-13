@@ -12,6 +12,7 @@ import {
   type GenerateOptions,
   type StreamChunk,
 } from "@deepseek-ai/dsh-llm";
+import { readColdSessionLog } from "@deepseek-ai/dsh-session-query";
 import { RelaySourceSchema } from "../lib/src/dispatch/session-kit/protocol.js";
 import { dispatchInput } from "../src/dispatch/client/projection.ts";
 import {
@@ -65,6 +66,41 @@ async function observeReply(host: SingleSession) {
 }
 
 const options = { timeout: 20_000 };
+
+for (const { name, title, expected } of [
+  { name: "保存指定标题", title: "  杭州天气预报  ", expected: "杭州天气预报" },
+  { name: "兼容省略标题", title: undefined, expected: undefined },
+  { name: "忽略空白标题", title: " \t ", expected: undefined },
+]) {
+  await test(`普通委派命名：${name}`, options, async () => {
+    const call = toolCallResponse("kongming_dispatch", {
+      provider: "mock",
+      model: "mock",
+      content: [{ type: "text", text: "查询天气" }],
+      ...(title === undefined ? {} : { title }),
+    });
+    const answer = (request: GenerateOptions) =>
+      textResponse(isTargetRequest(request) ? "杭州晴" : "孔明已记录");
+    await singleSession([call, answer, answer, answer], async (host) => {
+      await host.prompt("请委派查询");
+      const { target, text } = await observeReply(host);
+      assert.match(text, /杭州晴$/);
+      assert.equal(await host.ctx.sessions.flush(target.session), true);
+      const { events } = await readColdSessionLog(
+        host.ctx.sessionPersistence,
+        target.id,
+      );
+      const savedTitle = events.find((event) => event.type === "session/title");
+      assert.equal(savedTitle?.data.title, expected);
+      if (savedTitle !== undefined) {
+        const firstRequest = events.find(
+          (event) => event.type === "user/message",
+        );
+        assert.ok(firstRequest && savedTitle.seq < firstRequest.seq);
+      }
+    });
+  });
+}
 
 /** 用原生事件驱动同一个浏览器投影，检查分组和实际显示正文。 */
 function projectDispatchEvent(

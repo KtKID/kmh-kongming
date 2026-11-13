@@ -126,6 +126,8 @@
   name: "@deepseek-ai/dsh-client-ui-conversation"
 - id: ui-chat
   name: "@deepseek-ai/dsh-client-ui-chat"
+- id: ui-file-drag
+  name: "@deepseek-ai/dsh-client-ui-file-drag"
 - id: ui-tool
   name: "@deepseek-ai/dsh-client-ui-tool"
 - id: ui-input-trigger

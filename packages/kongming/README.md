@@ -72,6 +72,8 @@ description: 孔明固定原生会话的启动、提示词配置、身份恢复�
 
 委派工具只在孔明会话可用。`kongming_list_models` 列出当前 provider 和模型 ID，`kongming_dispatch` 使用精确的 provider/model ID 和有序内容块，创建后返回目标会话 ID 及排队状态。文本使用 DSH 内容块，图片可走原生入库，已入库的图片和文件引用须属于孔明会话。正在等待回传的关联保存在当前运行进程中。此版本每次委派创建新会话。
 
+`kongming_dispatch` 接受可选 `title`。例如，对孔明说「请委派查询杭州天气，会话叫『杭州天气预报』」。未指定名称时，孔明可按任务拟短标题。标题在发送任务前保存到新会话，并显示在侧栏。
+
 ## 可选记忆
 
 `@kmh/kongming-memory-v1` 提供冻结记忆加载、收尾记录提醒、专属保存工具和手动压缩刷新，随 `@kmh/kongming` bundle 一并安装。宿主配置可[单独停用记忆实例](../../docs/kmh-integration.md)。停用后，固定会话、人格、模型和通用工具继续工作。文件、提示词与权限要求见[记忆插件说明](../kongming-memory/README.md)。

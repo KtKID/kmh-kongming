@@ -1,6 +1,6 @@
 {
   "name": "@kmh/kongming",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "type": "module",
   "description": "DeepSeek Harness 的孔明助手与长期记忆",

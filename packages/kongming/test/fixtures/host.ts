@@ -100,6 +100,7 @@ export async function createHost(options: HostOptions) {
       Access,
       Gateway,
       Controller,
+      SessionTitle,
     ] = await Promise.all([
       import("@deepseek-ai/dsh-agent-default-model"),
       import("@deepseek-ai/dsh-storage"),
@@ -115,6 +116,7 @@ export async function createHost(options: HostOptions) {
       import("@deepseek-ai/dsh-api-remote-access"),
       import("@deepseek-ai/dsh-api-gateway"),
       import("@deepseek-ai/dsh-api-session-controller"),
+      import("@deepseek-ai/dsh-session-title"),
     ]);
     await ctx.plugin(DefaultModel.default, { provider: "mock", model: "mock" });
     await ctx.plugin(Storage.default);
@@ -130,6 +132,11 @@ export async function createHost(options: HostOptions) {
     await ctx.plugin(Commands.default);
     await ctx.plugin(Uploads.default);
     await ctx.plugin(Controller.default);
+    await ctx.plugin(SessionTitle.default, {
+      fallbackMaxWords: 5,
+      fallbackMaxBytes: 40,
+      maxTitleBytes: 80,
+    });
     return host;
   } catch (error) {
     await host.close();

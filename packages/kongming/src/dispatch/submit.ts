@@ -10,15 +10,16 @@ import { parseDispatchContent } from "./content.ts";
 interface DispatchRequest {
   provider: string;
   model: string;
+  title: string | undefined;
   content: unknown;
   cwd: string | undefined;
 }
 
-/** 校验模型与工作目录，将附件入库，返回选好模型的目标会话和待入队内容。 */
+/** 校验模型与目录并入库附件，返回完成命名和模型选择的目标会话及待入队内容。 */
 export async function prepareDispatch(
   ctx: Context,
   source: Agent,
-  { provider, model, content, cwd }: DispatchRequest,
+  { provider, model, title, content, cwd }: DispatchRequest,
   signal: AbortSignal,
   requireSource: () => void,
 ) {
@@ -69,6 +70,11 @@ export async function prepareDispatch(
   const resolved = await ctx.sessionController.resolveAgent(sessionId);
   if ("error" in resolved) throw resolved.error;
   requireSource();
+  const sessionTitle = title?.trim();
+  if (sessionTitle) {
+    await ctx.sessionController.rename({ sessionId, title: sessionTitle });
+    requireSource();
+  }
   resolved.agent.model.select(selection);
   return { sessionId, target: resolved.agent, admitted };
 }
