@@ -1,7 +1,43 @@
 {
-  "name": "kmh-kongming-repo",
+  "name": "@kmh/kongming",
+  "version": "0.1.2",
   "private": true,
-  "description": "孔明套件仓容器：实际代码在 packages/kongming 与 packages/kongming-memory",
+  "type": "module",
+  "description": "DeepSeek Harness 的孔明助手与长期记忆",
+  "engines": {
+    "dsh": "0.2.2-alpha.2 || 0.2.2-rc.1"
+  },
+  "exports": {
+    ".": "./prebuilt/index.js",
+    "./client": "./prebuilt/client.js",
+    "./memory": "./prebuilt/memory.js",
+    "./events": {
+      "types": "./packages/kongming/events.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "prebuilt",
+    "packages/kongming/events.d.ts"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./prebuilt/cordis.patch.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-api-session-controller",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-layout",
+        "@deepseek-ai/dsh-client-ui-sidebar",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-chat",
+        "@deepseek-ai/dsh-client-ui-workspace"
+      ],
+      "platform": "web"
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "eslint": "^9.39.0",
@@ -9,6 +45,7 @@
     "prettier": "^3.7.0"
   },
   "scripts": {
+    "build:git-bundle": "node scripts/pack-dsh.mjs --git",
     "pack:dsh": "node scripts/pack-dsh.mjs"
   }
 }

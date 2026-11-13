@@ -1,0 +1,2 @@
+# 预编译文件保留第三方代码模板字符串中的空白。
+prebuilt/*.js -whitespace linguist-generated=true

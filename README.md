@@ -23,14 +23,14 @@
 
 ## 安装与启用
 
-1. 打开 [DeepSeek Harness](https://www.deepseek.com/harness/)。预编译安装包面向 DSH `0.2.2-rc.1`，使用前请先配置一个可用模型。
-2. 打开侧栏「插件」→「添加插件」，粘贴以下 GitHub Release 安装包链接，点击「安装」。
+1. 打开 [DeepSeek Harness](https://www.deepseek.com/harness/)。插件适配 DSH `0.2.2-rc.1` 和 `0.2.2-alpha.2`。发送消息前请配置一个可用模型。
+2. 打开侧栏「插件」→「添加插件」，粘贴以下 GitHub 仓库地址，点击「安装」。
 
    ```text
-   https://github.com/KtKID/kmh-kongming/releases/latest/download/kmh-kongming.tgz
+   https://github.com/KtKID/kmh-kongming.git
    ```
 
-3. 安装完成后，侧栏会出现「孔明」。安装包自带孔明、记忆与会话委派代码。
+3. 安装完成后选择「立即启用」，再点侧栏「孔明」。一次安装会加载孔明和 Memory。仓库随附预编译入口，安装时无需构建。
 
 也可以从 [GitHub Releases](https://github.com/KtKID/kmh-kongming/releases) 选择版本，将对应 `.tgz` 的下载链接粘贴到同一输入框。
 
@@ -46,8 +46,11 @@
 pnpm install --frozen-lockfile
 pnpm -r --filter './packages/*' run build
 pnpm -r --filter './packages/*' test
+pnpm build:git-bundle
 pnpm pack:dsh
 ```
+
+更新孔明或 Memory 后，将 `pnpm build:git-bundle` 生成的 `prebuilt/` 与源码一并提交。持续集成会检查两者是否一致。
 
 本仓也可作为 kongming-os 的 Git 子模块使用。配置和构建方式见[在 KMH 中集成](docs/kmh-integration.md)。
 

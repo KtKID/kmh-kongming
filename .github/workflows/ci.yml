@@ -28,6 +28,11 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: 构建
         run: pnpm -r --filter './packages/*' run build
+      - name: 核对 Git 安装产物
+        run: |
+          pnpm build:git-bundle
+          git diff --exit-code -- prebuilt
+          test -z "$(git ls-files --others --exclude-standard -- prebuilt)"
       - name: 类型检查
         run: pnpm -r --filter './packages/*' run typecheck
       - name: 测试
